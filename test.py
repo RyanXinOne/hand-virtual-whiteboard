@@ -12,11 +12,11 @@ import torch
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 
-from pytorchyolo.models import load_model
-from pytorchyolo.utils.utils import load_classes, ap_per_class, get_batch_statistics, non_max_suppression, to_cpu, xywh2xyxy, print_environment_info
-from pytorchyolo.utils.datasets import ListDataset
-from pytorchyolo.utils.transforms import DEFAULT_TRANSFORMS
-from pytorchyolo.utils.parse_config import parse_data_config
+from models import load_model
+from utils.utils import load_classes, ap_per_class, get_batch_statistics, non_max_suppression, to_cpu, xywh2xyxy, print_environment_info
+from utils.datasets import ListDataset
+from utils.transforms import DEFAULT_TRANSFORMS
+from utils.parse_config import parse_data_config
 
 
 def evaluate_model_file(model_path, weights_path, img_path, class_names, batch_size=8, img_size=416,

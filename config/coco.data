@@ -1,6 +1,6 @@
 classes= 80
-train=data/coco/trainvalno5k.txt
-valid=data/coco/5k.txt
-names=data/coco.names
+train=D:/Datasets/coco2014/trainvalno5k.txt
+valid=D:/Datasets/coco2014/5k.txt
+names=D:/Datasets/coco2014/coco.names
 backup=backup/
 eval=coco

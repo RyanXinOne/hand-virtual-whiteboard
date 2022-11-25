@@ -15,10 +15,11 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 
-from pytorchyolo.models import load_model
-from pytorchyolo.utils.utils import load_classes, rescale_boxes, non_max_suppression, print_environment_info
-from pytorchyolo.utils.datasets import ImageFolder
-from pytorchyolo.utils.transforms import Resize, DEFAULT_TRANSFORMS
+from models import load_model
+from utils.utils import load_classes, rescale_boxes, non_max_suppression, print_environment_info
+from utils.datasets import ImageFolder
+from utils.transforms import Resize, DEFAULT_TRANSFORMS
+from utils.parse_config import parse_data_config
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -254,7 +255,7 @@ def run():
     parser.add_argument("-m", "--model", type=str, default="config/yolov3.cfg", help="Path to model definition file (.cfg)")
     parser.add_argument("-w", "--weights", type=str, default="weights/yolov3.weights", help="Path to weights or checkpoint file (.weights or .pth)")
     parser.add_argument("-i", "--images", type=str, default="data/samples", help="Path to directory with images to inference")
-    parser.add_argument("-c", "--classes", type=str, default="data/coco.names", help="Path to classes label file (.names)")
+    parser.add_argument("-d", "--data", type=str, default="config/coco.data", help="Path to data config file (.data)")
     parser.add_argument("-o", "--output", type=str, default="output", help="Path to output directory")
     parser.add_argument("-b", "--batch_size", type=int, default=1, help="Size of each image batch")
     parser.add_argument("--img_size", type=int, default=416, help="Size of each image dimension for yolo")
@@ -264,8 +265,10 @@ def run():
     args = parser.parse_args()
     print(f"Command line arguments: {args}")
 
+    # Load configuration from data file
+    data_config = parse_data_config(args.data)
     # Extract class names from file
-    classes = load_classes(args.classes)  # List of class names
+    classes = load_classes(data_config["names"])  # List of class names
 
     detect_directory(
         args.model,

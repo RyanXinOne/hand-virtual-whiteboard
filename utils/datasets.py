@@ -57,6 +57,7 @@ class ImageFolder(Dataset):
 
 class ListDataset(Dataset):
     def __init__(self, list_path, img_size=416, multiscale=True, transform=None):
+        self.base_path = os.path.dirname(list_path)
         with open(list_path, "r") as file:
             self.img_files = file.readlines()
 
@@ -86,6 +87,7 @@ class ListDataset(Dataset):
         try:
 
             img_path = self.img_files[index % len(self.img_files)].rstrip()
+            img_path = self.base_path + img_path
 
             img = np.array(Image.open(img_path).convert('RGB'), dtype=np.uint8)
         except Exception:
@@ -97,6 +99,7 @@ class ListDataset(Dataset):
         # ---------
         try:
             label_path = self.label_files[index % len(self.img_files)].rstrip()
+            label_path = self.base_path + label_path
 
             # Ignore warning if file is empty
             with warnings.catch_warnings():
