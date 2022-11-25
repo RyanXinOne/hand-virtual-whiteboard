@@ -224,7 +224,7 @@ def get_batch_statistics(outputs, targets, iou_threshold):
                 # Remap the index in the list of filtered targets for that label to the index in the list with all targets.
                 box_index = filtered_target_position[box_filtered_index]
 
-                # Check if the iou is above the min treshold and i
+                # Check if the iou is above the min threshold and i
                 if iou >= iou_threshold and box_index not in detected_boxes:
                     true_positives[pred_i] = 1
                     detected_boxes += [box_index]
@@ -258,7 +258,7 @@ def bbox_iou(box1, box2, x1y1x2y2=True):
         b2_x1, b2_y1, b2_x2, b2_y2 = \
             box2[:, 0], box2[:, 1], box2[:, 2], box2[:, 3]
 
-    # get the corrdinates of the intersection rectangle
+    # get the coordinates of the intersection rectangle
     inter_rect_x1 = torch.max(b1_x1, b2_x1)
     inter_rect_y1 = torch.max(b1_y1, b2_y1)
     inter_rect_x2 = torch.min(b1_x2, b2_x2)
@@ -377,7 +377,7 @@ def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=Non
 def print_environment_info():
     """
     Prints infos about the environment and the system.
-    This should help when people make issues containg the printout.
+    This should help when people make issues containing the printout.
     """
 
     print("Environment information:")

@@ -59,7 +59,7 @@ def compute_loss(predictions, targets, model):
     # Check which device was used
     device = targets.device
 
-    # Add placeholder varables for the different losses
+    # Add placeholder variables for the different losses
     lcls, lbox, lobj = torch.zeros(1, device=device), torch.zeros(1, device=device), torch.zeros(1, device=device)
 
     # Build yolo targets
@@ -113,7 +113,7 @@ def compute_loss(predictions, targets, model):
 
         # Classification of the objectness the sequel
         # Calculate the BCE loss between the on the fly generated target and the network prediction
-        lobj += BCEobj(layer_predictions[..., 4], tobj) # obj loss
+        lobj += BCEobj(layer_predictions[..., 4], tobj)  # obj loss
 
     lbox *= 0.05
     lobj *= 1.0
@@ -139,7 +139,7 @@ def build_targets(p, targets, model):
         # Scale anchors by the yolo grid cell size so that an anchor with the size of the cell would result in 1
         anchors = yolo_layer.anchors / yolo_layer.stride
         # Add the number of yolo cells in this layer the gain tensor
-        # The gain tensor matches the collums of our targets (img id, class, x, y, w, h, anchor id)
+        # The gain tensor matches the columns of our targets (img id, class, x, y, w, h, anchor id)
         gain[2:6] = torch.tensor(p[i].shape)[[3, 2, 3, 2]]  # xyxy gain
         # Scale targets by the number of yolo layer cells, they are now in the yolo cell coordinate system
         t = targets * gain
@@ -159,7 +159,7 @@ def build_targets(p, targets, model):
         # Extract image id in batch and class id
         b, c = t[:, :2].long().T
         # We isolate the target cell associations.
-        # x, y, w, h are allready in the cell coordinate system meaning an x = 1.2 would be 1.2 times cellwidth
+        # x, y, w, h are already in the cell coordinate system meaning an x = 1.2 would be 1.2 times cellwidth
         gxy = t[:, 2:4]
         gwh = t[:, 4:6]  # grid wh
         # Cast to int to get an cell index e.g. 1.2 gets associated to cell 1
