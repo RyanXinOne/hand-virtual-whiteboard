@@ -1,7 +1,3 @@
-#! /usr/bin/env python3
-
-from __future__ import division
-
 import argparse
 import tqdm
 import numpy as np
@@ -19,8 +15,7 @@ from utils.transforms import DEFAULT_TRANSFORMS
 from utils.parse_config import parse_data_config
 
 
-def evaluate_model_file(model_path, weights_path, img_path, class_names, batch_size=8, img_size=416,
-                        n_cpu=8, iou_thres=0.5, conf_thres=0.5, nms_thres=0.5, verbose=True):
+def evaluate_model_file(model_path, weights_path, img_path, class_names, batch_size=8, img_size=416, n_cpu=8, iou_thres=0.5, conf_thres=0.5, nms_thres=0.5, verbose=True):
     """Evaluate model on validation dataset.
 
     :param model_path: Path to model definition file (.cfg)
@@ -47,18 +42,9 @@ def evaluate_model_file(model_path, weights_path, img_path, class_names, batch_s
     :type verbose: bool, optional
     :return: Returns precision, recall, AP, f1, ap_class
     """
-    dataloader = _create_validation_data_loader(
-        img_path, batch_size, img_size, n_cpu)
+    dataloader = _create_validation_data_loader(img_path, batch_size, img_size, n_cpu)
     model = load_model(model_path, weights_path)
-    metrics_output = _evaluate(
-        model,
-        dataloader,
-        class_names,
-        img_size,
-        iou_thres,
-        conf_thres,
-        nms_thres,
-        verbose)
+    metrics_output = _evaluate(model, dataloader, class_names, img_size, iou_thres, conf_thres, nms_thres, verbose)
     return metrics_output
 
 
@@ -123,10 +109,8 @@ def _evaluate(model, dataloader, class_names, img_size, iou_thres, conf_thres, n
         return None
 
     # Concatenate sample statistics
-    true_positives, pred_scores, pred_labels = [
-        np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
-    metrics_output = ap_per_class(
-        true_positives, pred_scores, pred_labels, labels)
+    true_positives, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
+    metrics_output = ap_per_class(true_positives, pred_scores, pred_labels, labels)
 
     print_eval_stats(metrics_output, class_names, verbose)
 

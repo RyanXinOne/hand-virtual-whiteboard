@@ -1,10 +1,9 @@
-#! /usr/bin/env python3
-
-from __future__ import division
-
 import os
 import argparse
 import tqdm
+
+from terminaltables import AsciiTable
+from torchsummary import summary
 
 import torch
 from torch.utils.data import DataLoader
@@ -15,14 +14,9 @@ from utils.logger import Logger
 from utils.utils import to_cpu, load_classes, print_environment_info, provide_determinism, worker_seed_set
 from utils.datasets import ListDataset
 from utils.augmentations import AUGMENTATION_TRANSFORMS
-#from utils.transforms import DEFAULT_TRANSFORMS
 from utils.parse_config import parse_data_config
 from utils.loss import compute_loss
 from test import _evaluate, _create_validation_data_loader
-
-from terminaltables import AsciiTable
-
-from torchsummary import summary
 
 
 def _create_data_loader(img_path, batch_size, img_size, n_cpu, multiscale_training=False):
@@ -130,13 +124,12 @@ def run():
 
     params = [p for p in model.parameters() if p.requires_grad]
 
-    if (model.hyperparams['optimizer'] in [None, "adam"]):
+    if model.hyperparams['optimizer'] in [None, "adam"]:
         optimizer = optim.Adam(
             params,
             lr=model.hyperparams['learning_rate'],
-            weight_decay=model.hyperparams['decay'],
-        )
-    elif (model.hyperparams['optimizer'] == "sgd"):
+            weight_decay=model.hyperparams['decay'])
+    elif model.hyperparams['optimizer'] == "sgd":
         optimizer = optim.SGD(
             params,
             lr=model.hyperparams['learning_rate'],
@@ -197,15 +190,14 @@ def run():
             # Log progress
             # ############
             if args.verbose:
-                print(AsciiTable(
-                    [
-                        ["Type", "Value"],
-                        ["IoU loss", float(loss_components[0])],
-                        ["Object loss", float(loss_components[1])],
-                        ["Class loss", float(loss_components[2])],
-                        ["Loss", float(loss_components[3])],
-                        ["Batch loss", to_cpu(loss).item()],
-                    ]).table)
+                print(AsciiTable([
+                    ["Type", "Value"],
+                    ["IoU loss", float(loss_components[0])],
+                    ["Object loss", float(loss_components[1])],
+                    ["Class loss", float(loss_components[2])],
+                    ["Loss", float(loss_components[3])],
+                    ["Batch loss", to_cpu(loss).item()]]
+                ).table)
 
             # Tensorboard logging
             tensorboard_log = [

@@ -1,14 +1,13 @@
-#! /usr/bin/env python3
-
-from __future__ import division
-
 import os
+import random
 import argparse
 import tqdm
-import random
 import numpy as np
 
 from PIL import Image
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib.ticker import NullLocator
 
 import torch
 import torchvision.transforms as transforms
@@ -21,13 +20,8 @@ from utils.datasets import ImageFolder
 from utils.transforms import Resize, DEFAULT_TRANSFORMS
 from utils.parse_config import parse_data_config
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from matplotlib.ticker import NullLocator
 
-
-def detect_directory(model_path, weights_path, img_path, classes, output_path,
-                     batch_size=8, img_size=416, n_cpu=8, conf_thres=0.5, nms_thres=0.5):
+def detect_directory(model_path, weights_path, img_path, classes, output_path, batch_size=8, img_size=416, n_cpu=8, conf_thres=0.5, nms_thres=0.5):
     """Detects objects on all images in specified directory and saves output images with drawn detections.
 
     :param model_path: Path to model definition file (.cfg)
@@ -53,14 +47,8 @@ def detect_directory(model_path, weights_path, img_path, classes, output_path,
     """
     dataloader = _create_data_loader(img_path, batch_size, img_size, n_cpu)
     model = load_model(model_path, weights_path)
-    img_detections, imgs = detect(
-        model,
-        dataloader,
-        output_path,
-        conf_thres,
-        nms_thres)
-    _draw_and_save_output_images(
-        img_detections, imgs, img_size, output_path, classes)
+    img_detections, imgs = detect(model, dataloader, output_path, conf_thres, nms_thres)
+    _draw_and_save_output_images(img_detections, imgs, img_size, output_path, classes)
 
     print(f"---- Detections were saved to: '{output_path}' ----")
 
@@ -86,8 +74,8 @@ def detect_image(model, image, img_size=416, conf_thres=0.5, nms_thres=0.5):
     # Configure input
     input_img = transforms.Compose([
         DEFAULT_TRANSFORMS,
-        Resize(img_size)])(
-            (image, np.zeros((1, 5))))[0].unsqueeze(0)
+        Resize(img_size)]
+    )((image, np.zeros((1, 5))))[0].unsqueeze(0)
 
     if torch.cuda.is_available():
         input_img = input_img.to("cuda")
@@ -161,8 +149,7 @@ def _draw_and_save_output_images(img_detections, imgs, img_size, output_path, cl
     # Iterate through images and save plot of detections
     for (image_path, detections) in zip(imgs, img_detections):
         print(f"Image {image_path}:")
-        _draw_and_save_output_image(
-            image_path, detections, img_size, output_path, classes)
+        _draw_and_save_output_image(image_path, detections, img_size, output_path, classes)
 
 
 def _draw_and_save_output_image(image_path, detections, img_size, output_path, classes):
@@ -192,8 +179,8 @@ def _draw_and_save_output_image(image_path, detections, img_size, output_path, c
     cmap = plt.get_cmap("tab20b")
     colors = [cmap(i) for i in np.linspace(0, 1, n_cls_preds)]
     bbox_colors = random.sample(colors, n_cls_preds)
-    for x1, y1, x2, y2, conf, cls_pred in detections:
 
+    for x1, y1, x2, y2, conf, cls_pred in detections:
         print(f"\t+ Label: {classes[int(cls_pred)]} | Confidence: {conf.item():0.4f}")
 
         box_w = x2 - x1

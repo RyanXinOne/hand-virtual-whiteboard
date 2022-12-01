@@ -22,14 +22,10 @@ class ImgAug(object):
         boxes[:, 1:] = xywh2xyxy_np(boxes[:, 1:])
 
         # Convert bounding boxes to imgaug
-        bounding_boxes = BoundingBoxesOnImage(
-            [BoundingBox(*box[1:], label=box[0]) for box in boxes],
-            shape=img.shape)
+        bounding_boxes = BoundingBoxesOnImage([BoundingBox(*box[1:], label=box[0]) for box in boxes], shape=img.shape)
 
         # Apply augmentations
-        img, bounding_boxes = self.augmentations(
-            image=img,
-            bounding_boxes=bounding_boxes)
+        img, bounding_boxes = self.augmentations(image=img, bounding_boxes=bounding_boxes)
 
         # Clip out of image boxes
         bounding_boxes = bounding_boxes.clip_out_of_image()
@@ -80,9 +76,7 @@ class AbsoluteLabels(object):
 class PadSquare(ImgAug):
     def __init__(self, ):
         self.augmentations = iaa.Sequential([
-            iaa.PadToAspectRatio(
-                1.0,
-                position="center-center").to_deterministic()
+            iaa.PadToAspectRatio(1.0, position="center-center").to_deterministic()
         ])
 
 

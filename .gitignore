@@ -1,21 +1,11 @@
 .DS_Store
-build
-.git
-*.egg-info
-dist
+.vscode/
+
 output/
-data/*
-backup
+checkpoints/
+logs/
 weights/*.weights
 weights/*.conv.*
-__pycache__
-checkpoints/
-
-.vscode/
-logs/
-
-.python-version
-
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

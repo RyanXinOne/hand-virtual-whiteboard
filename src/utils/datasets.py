@@ -38,9 +38,7 @@ class ImageFolder(Dataset):
     def __getitem__(self, index):
 
         img_path = self.files[index % len(self.files)]
-        img = np.array(
-            Image.open(img_path).convert('RGB'),
-            dtype=np.uint8)
+        img = np.array(Image.open(img_path).convert('RGB'), dtype=np.uint8)
 
         # Label Placeholder
         boxes = np.zeros((1, 5))
@@ -65,8 +63,7 @@ class ListDataset(Dataset):
         for path in self.img_files:
             image_dir = os.path.dirname(path)
             label_dir = "labels".join(image_dir.rsplit("images", 1))
-            assert label_dir != image_dir, \
-                f"Image path must contain a folder named 'images'! \n'{image_dir}'"
+            assert label_dir != image_dir, f"Image path must contain a folder named 'images'! \n'{image_dir}'"
             label_file = os.path.join(label_dir, os.path.basename(path))
             label_file = os.path.splitext(label_file)[0] + '.txt'
             self.label_files.append(label_file)
