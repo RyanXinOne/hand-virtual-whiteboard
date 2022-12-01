@@ -28,11 +28,9 @@ def create_modules(module_defs):
         'burn_in': int(hyperparams['burn_in']),
         'max_batches': int(hyperparams['max_batches']),
         'policy': hyperparams['policy'],
-        'lr_steps': list(zip(map(int,   hyperparams["steps"].split(",")),
-                             map(float, hyperparams["scales"].split(","))))
+        'lr_steps': list(zip(map(int, hyperparams["steps"].split(",")), map(float, hyperparams["scales"].split(","))))
     })
-    assert hyperparams["height"] == hyperparams["width"], \
-        "Height and width should be equal! Non square images are padded with zeros."
+    assert hyperparams["height"] == hyperparams["width"], "Height and width should be equal! Non square images are padded with zeros."
     output_filters = [hyperparams["channels"]]
     module_list = nn.ModuleList()
     for module_i, module_def in enumerate(module_defs):
@@ -51,12 +49,9 @@ def create_modules(module_defs):
                     kernel_size=kernel_size,
                     stride=int(module_def["stride"]),
                     padding=pad,
-                    bias=not bn,
-                ),
-            )
+                    bias=not bn))
             if bn:
-                modules.add_module(f"batch_norm_{module_i}",
-                                   nn.BatchNorm2d(filters, momentum=0.1, eps=1e-5))
+                modules.add_module(f"batch_norm_{module_i}", nn.BatchNorm2d(filters, momentum=0.1, eps=1e-5))
             if module_def["activation"] == "leaky":
                 modules.add_module(f"leaky_{module_i}", nn.LeakyReLU(0.1))
             if module_def["activation"] == "mish":
@@ -67,8 +62,7 @@ def create_modules(module_defs):
             stride = int(module_def["stride"])
             if kernel_size == 2 and stride == 1:
                 modules.add_module(f"_debug_padding_{module_i}", nn.ZeroPad2d((0, 1, 0, 1)))
-            maxpool = nn.MaxPool2d(kernel_size=kernel_size, stride=stride,
-                                   padding=int((kernel_size - 1) // 2))
+            maxpool = nn.MaxPool2d(kernel_size=kernel_size, stride=stride, padding=int((kernel_size - 1) // 2))
             modules.add_module(f"maxpool_{module_i}", maxpool)
 
         elif module_def["type"] == "upsample":
@@ -138,8 +132,7 @@ class YOLOLayer(nn.Module):
 
         anchors = torch.tensor(list(chain(*anchors))).float().view(-1, 2)
         self.register_buffer('anchors', anchors)
-        self.register_buffer(
-            'anchor_grid', anchors.clone().view(1, -1, 1, 1, 2))
+        self.register_buffer('anchor_grid', anchors.clone().view(1, -1, 1, 1, 2))
         self.stride = None
 
     def forward(self, x, img_size):
@@ -172,8 +165,7 @@ class Darknet(nn.Module):
         super(Darknet, self).__init__()
         self.module_defs = parse_model_config(config_path)
         self.hyperparams, self.module_list = create_modules(self.module_defs)
-        self.yolo_layers = [layer[0]
-                            for layer in self.module_list if isinstance(layer[0], YOLOLayer)]
+        self.yolo_layers = [layer[0] for layer in self.module_list if isinstance(layer[0], YOLOLayer)]
         self.seen = 0
         self.header_info = np.array([0, 0, 0, self.seen, 0], dtype=np.int32)
 
@@ -230,36 +222,30 @@ class Darknet(nn.Module):
                     bn_layer = module[1]
                     num_b = bn_layer.bias.numel()  # Number of biases
                     # Bias
-                    bn_b = torch.from_numpy(
-                        weights[ptr: ptr + num_b]).view_as(bn_layer.bias)
+                    bn_b = torch.from_numpy(weights[ptr: ptr + num_b]).view_as(bn_layer.bias)
                     bn_layer.bias.data.copy_(bn_b)
                     ptr += num_b
                     # Weight
-                    bn_w = torch.from_numpy(
-                        weights[ptr: ptr + num_b]).view_as(bn_layer.weight)
+                    bn_w = torch.from_numpy(weights[ptr: ptr + num_b]).view_as(bn_layer.weight)
                     bn_layer.weight.data.copy_(bn_w)
                     ptr += num_b
                     # Running Mean
-                    bn_rm = torch.from_numpy(
-                        weights[ptr: ptr + num_b]).view_as(bn_layer.running_mean)
+                    bn_rm = torch.from_numpy(weights[ptr: ptr + num_b]).view_as(bn_layer.running_mean)
                     bn_layer.running_mean.data.copy_(bn_rm)
                     ptr += num_b
                     # Running Var
-                    bn_rv = torch.from_numpy(
-                        weights[ptr: ptr + num_b]).view_as(bn_layer.running_var)
+                    bn_rv = torch.from_numpy(weights[ptr: ptr + num_b]).view_as(bn_layer.running_var)
                     bn_layer.running_var.data.copy_(bn_rv)
                     ptr += num_b
                 else:
                     # Load conv. bias
                     num_b = conv_layer.bias.numel()
-                    conv_b = torch.from_numpy(
-                        weights[ptr: ptr + num_b]).view_as(conv_layer.bias)
+                    conv_b = torch.from_numpy(weights[ptr: ptr + num_b]).view_as(conv_layer.bias)
                     conv_layer.bias.data.copy_(conv_b)
                     ptr += num_b
                 # Load conv. weights
                 num_w = conv_layer.weight.numel()
-                conv_w = torch.from_numpy(
-                    weights[ptr: ptr + num_w]).view_as(conv_layer.weight)
+                conv_w = torch.from_numpy(weights[ptr: ptr + num_w]).view_as(conv_layer.weight)
                 conv_layer.weight.data.copy_(conv_w)
                 ptr += num_w
 
@@ -302,8 +288,7 @@ def load_model(model_path, weights_path=None):
     :return: Returns model
     :rtype: Darknet
     """
-    device = torch.device("cuda" if torch.cuda.is_available()
-                          else "cpu")  # Select device for inference
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  # Select device for inference
     model = Darknet(model_path).to(device)
 
     model.apply(weights_init_normal)
