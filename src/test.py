@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from torch.autograd import Variable
 
 from models import load_model
-from utils.utils import load_classes, ap_per_class, get_batch_statistics, non_max_suppression, to_cpu, xywh2xyxy, print_environment_info
+from utils.utils import load_classes, ap_per_class, get_batch_statistics, non_max_suppression, xywh2xyxy
 from utils.datasets import ListDataset
 from utils.transforms import DEFAULT_TRANSFORMS
 from utils.parse_config import parse_data_config
@@ -144,7 +144,6 @@ def _create_validation_data_loader(img_path, batch_size, img_size, n_cpu):
 
 
 def run():
-    print_environment_info()
     parser = argparse.ArgumentParser(description="Evaluate validation data.")
     parser.add_argument("-m", "--model", type=str, default="config/yolov3.cfg", help="Path to model definition file (.cfg)")
     parser.add_argument("-w", "--weights", type=str, default="weights/yolov3.weights", help="Path to weights or checkpoint file (.weights or .pth)")

@@ -11,7 +11,7 @@ import torch.optim as optim
 
 from models import load_model
 from utils.logger import Logger
-from utils.utils import to_cpu, load_classes, print_environment_info, provide_determinism, worker_seed_set
+from utils.utils import to_cpu, load_classes, provide_determinism, worker_seed_set
 from utils.datasets import ListDataset
 from utils.augmentations import AUGMENTATION_TRANSFORMS
 from utils.parse_config import parse_data_config
@@ -52,14 +52,14 @@ def _create_data_loader(img_path, batch_size, img_size, n_cpu, multiscale_traini
 
 
 def run():
-    print_environment_info()
     parser = argparse.ArgumentParser(description="Trains the YOLO model.")
     parser.add_argument("-m", "--model", type=str, default="config/yolov3-hagrid-3.cfg", help="Path to model definition file (.cfg)")
     parser.add_argument("-d", "--data", type=str, default="config/hagrid-3.data", help="Path to data config file (.data)")
     parser.add_argument("-e", "--epochs", type=int, default=300, help="Number of epochs")
     parser.add_argument("-v", "--verbose", action='store_true', help="Makes the training more verbose")
-    parser.add_argument("--n_cpu", type=int, default=8, help="Number of cpu threads to use during batch generation")
-    parser.add_argument("--pretrained_weights", type=str, default="weights/darknet53.conv.74", help="Path to checkpoint file (.weights or .pth). Starts training from checkpoint model")
+    parser.add_argument("--n_cpu", type=int, default=12, help="Number of cpu threads to use during batch generation")
+    parser.add_argument("--pretrained_weights", type=str, default="checkpoints/yolov3_ckpt_17_map0.70880.pth", help="Path to checkpoint file (.weights or .pth). Starts training from checkpoint model")
+    parser.add_argument("--pretrained_epochs", type=int, default=17, help="Number of epochs already trained. Used to determine the epoch number in the checkpoint filename.")
     parser.add_argument("--checkpoint_interval", type=int, default=1, help="Interval of epochs between saving model weights")
     parser.add_argument("--evaluation_interval", type=int, default=1, help="Interval of epochs between evaluations on validation set")
     parser.add_argument("--multiscale_training", action="store_true", help="Allow multi-scale training")
@@ -141,7 +141,7 @@ def run():
     # skip epoch zero, because then the calculations for when to evaluate/checkpoint makes more intuitive sense
     # e.g. when you stop after 30 epochs and evaluate every 10 epochs then the evaluations happen after: 10,20,30
     # instead of: 0, 10, 20
-    for epoch in range(1, args.epochs+1):
+    for epoch in range(args.pretrained_epochs+1, args.epochs+1):
 
         print("\n---- Training Model ----")
 
