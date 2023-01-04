@@ -1,6 +1,5 @@
 import os
 import random
-import argparse
 import tqdm
 import numpy as np
 
@@ -19,6 +18,18 @@ from utils.utils import load_classes, rescale_boxes, non_max_suppression
 from utils.datasets import ImageFolder
 from utils.transforms import Resize, DEFAULT_TRANSFORMS
 from utils.parse_config import parse_data_config
+
+
+MODEL_DEF = "config/yolov3-hagrid-3.cfg"
+PRETRAINED_WEIGHTS = "weights/hand/hagrid-3.pth"
+BATCH_SIZE = 1
+DATA_CONFIG = "config/hagrid-3.data"
+IMAGES_INPUT = "D:/Datasets/HaGRID/images/subsample"
+IMAGES_OUTPUT = "output/"
+IMG_SIZE = 416
+N_CPU = 12
+CONF_THRES = 0.1
+NMS_THRES = 0.4
 
 
 def detect_directory(model_path, weights_path, img_path, classes, output_path, batch_size=8, img_size=416, n_cpu=8, conf_thres=0.5, nms_thres=0.5):
@@ -236,38 +247,20 @@ def _create_data_loader(img_path, batch_size, img_size, n_cpu):
     return dataloader
 
 
-def run():
-    parser = argparse.ArgumentParser(description="Detect objects on images.")
-    parser.add_argument("-m", "--model", type=str, default="config/yolov3-hagrid-3.cfg", help="Path to model definition file (.cfg)")
-    parser.add_argument("-w", "--weights", type=str, default="weights/hand/hagrid-3.pth", help="Path to weights or checkpoint file (.weights or .pth)")
-    parser.add_argument("-i", "--images", type=str, default="D:/Datasets/HaGRID/images/subsample", help="Path to directory with images to inference")
-    parser.add_argument("-d", "--data", type=str, default="config/hagrid-3.data", help="Path to data config file (.data)")
-    parser.add_argument("-o", "--output", type=str, default="output", help="Path to output directory")
-    parser.add_argument("-b", "--batch_size", type=int, default=1, help="Size of each image batch")
-    parser.add_argument("--img_size", type=int, default=416, help="Size of each image dimension for yolo")
-    parser.add_argument("--n_cpu", type=int, default=12, help="Number of cpu threads to use during batch generation")
-    parser.add_argument("--conf_thres", type=float, default=0.1, help="Object confidence threshold")
-    parser.add_argument("--nms_thres", type=float, default=0.4, help="IOU threshold for non-maximum suppression")
-    args = parser.parse_args()
-    print(f"Command line arguments: {args}")
-
+if __name__ == '__main__':
     # Load configuration from data file
-    data_config = parse_data_config(args.data)
+    data_config = parse_data_config(DATA_CONFIG)
     # Extract class names from file
     classes = load_classes(data_config["names"])  # List of class names
 
     detect_directory(
-        args.model,
-        args.weights,
-        args.images,
+        MODEL_DEF,
+        PRETRAINED_WEIGHTS,
+        IMAGES_INPUT,
         classes,
-        args.output,
-        batch_size=args.batch_size,
-        img_size=args.img_size,
-        n_cpu=args.n_cpu,
-        conf_thres=args.conf_thres,
-        nms_thres=args.nms_thres)
-
-
-if __name__ == '__main__':
-    run()
+        IMAGES_OUTPUT,
+        batch_size=BATCH_SIZE,
+        img_size=IMG_SIZE,
+        n_cpu=N_CPU,
+        conf_thres=CONF_THRES,
+        nms_thres=NMS_THRES)

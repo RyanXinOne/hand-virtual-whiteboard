@@ -1,8 +1,6 @@
-import argparse
 import tqdm
-import numpy as np
-
 from terminaltables import AsciiTable
+import numpy as np
 
 import torch
 from torch.utils.data import DataLoader
@@ -13,6 +11,18 @@ from utils.utils import load_classes, ap_per_class, get_batch_statistics, non_ma
 from utils.datasets import ListDataset
 from utils.transforms import DEFAULT_TRANSFORMS
 from utils.parse_config import parse_data_config
+
+
+MODEL_DEF = "config/yolov3-hagrid-3.cfg"
+PRETRAINED_WEIGHTS = "weights/hand/hagrid-3.pth"
+BATCH_SIZE = 8
+DATA_CONFIG = "config/hagrid-3.data"
+IMG_SIZE = 416
+N_CPU = 12
+IOU_THRES = 0.5
+CONF_THRES = 0.1
+NMS_THRES = 0.4
+VERBOSE = True
 
 
 def evaluate_model_file(model_path, weights_path, img_path, class_names, batch_size=8, img_size=416, n_cpu=8, iou_thres=0.5, conf_thres=0.5, nms_thres=0.5, verbose=True):
@@ -143,40 +153,22 @@ def _create_validation_data_loader(img_path, batch_size, img_size, n_cpu):
     return dataloader
 
 
-def run():
-    parser = argparse.ArgumentParser(description="Evaluate validation data.")
-    parser.add_argument("-m", "--model", type=str, default="config/yolov3-hagrid-3.cfg", help="Path to model definition file (.cfg)")
-    parser.add_argument("-w", "--weights", type=str, default="weights/hand/hagrid-3.pth", help="Path to weights or checkpoint file (.weights or .pth)")
-    parser.add_argument("-d", "--data", type=str, default="config/hagrid-3.data", help="Path to data config file (.data)")
-    parser.add_argument("-b", "--batch_size", type=int, default=8, help="Size of each image batch")
-    parser.add_argument("-v", "--verbose", action='store_true', help="Makes the validation more verbose")
-    parser.add_argument("--img_size", type=int, default=416, help="Size of each image dimension for yolo")
-    parser.add_argument("--n_cpu", type=int, default=12, help="Number of cpu threads to use during batch generation")
-    parser.add_argument("--iou_thres", type=float, default=0.5, help="IOU threshold required to qualify as detected")
-    parser.add_argument("--conf_thres", type=float, default=0.1, help="Object confidence threshold")
-    parser.add_argument("--nms_thres", type=float, default=0.4, help="IOU threshold for non-maximum suppression")
-    args = parser.parse_args()
-    print(f"Command line arguments: {args}")
-
+if __name__ == "__main__":
     # Load configuration from data file
-    data_config = parse_data_config(args.data)
+    data_config = parse_data_config(DATA_CONFIG)
     # Path to file containing all images for validation
     valid_path = data_config["valid"]
     class_names = load_classes(data_config["names"])  # List of class names
 
     precision, recall, AP, f1, ap_class = evaluate_model_file(
-        args.model,
-        args.weights,
+        MODEL_DEF,
+        PRETRAINED_WEIGHTS,
         valid_path,
         class_names,
-        batch_size=args.batch_size,
-        img_size=args.img_size,
-        n_cpu=args.n_cpu,
-        iou_thres=args.iou_thres,
-        conf_thres=args.conf_thres,
-        nms_thres=args.nms_thres,
-        verbose=True)
-
-
-if __name__ == "__main__":
-    run()
+        batch_size=BATCH_SIZE,
+        img_size=IMG_SIZE,
+        n_cpu=N_CPU,
+        iou_thres=IOU_THRES,
+        conf_thres=CONF_THRES,
+        nms_thres=NMS_THRES,
+        verbose=VERBOSE)
