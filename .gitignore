@@ -4,8 +4,7 @@
 output/
 checkpoints/
 logs/
-weights/*.weights
-weights/*.conv.*
+weights/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

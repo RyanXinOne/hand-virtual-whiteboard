@@ -239,7 +239,7 @@ def _create_data_loader(img_path, batch_size, img_size, n_cpu):
 def run():
     parser = argparse.ArgumentParser(description="Detect objects on images.")
     parser.add_argument("-m", "--model", type=str, default="config/yolov3-hagrid-3.cfg", help="Path to model definition file (.cfg)")
-    parser.add_argument("-w", "--weights", type=str, default="checkpoints/yolov3_ckpt_40_map0.87006.pth", help="Path to weights or checkpoint file (.weights or .pth)")
+    parser.add_argument("-w", "--weights", type=str, default="weights/hand/hagrid-3.pth", help="Path to weights or checkpoint file (.weights or .pth)")
     parser.add_argument("-i", "--images", type=str, default="D:/Datasets/HaGRID/images/subsample", help="Path to directory with images to inference")
     parser.add_argument("-d", "--data", type=str, default="config/hagrid-3.data", help="Path to data config file (.data)")
     parser.add_argument("-o", "--output", type=str, default="output", help="Path to output directory")
