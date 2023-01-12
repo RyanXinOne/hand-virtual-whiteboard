@@ -1,7 +1,7 @@
-import torch
 import torch.nn as nn
 from torchvision.models import vgg16_bn
 import torchsummary
+from utils import device
 
 
 class FingertipDetector(nn.Module):
@@ -23,6 +23,5 @@ class FingertipDetector(nn.Module):
 
 
 if __name__ == '__main__':
-    model = FingertipDetector()
-    model.to('cuda' if torch.cuda.is_available() else 'cpu')
+    model = FingertipDetector().to(device)
     torchsummary.summary(model, (3, 128, 128))
