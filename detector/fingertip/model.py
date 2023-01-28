@@ -5,6 +5,12 @@ from utils import device
 
 
 class FingertipDetector(nn.Module):
+    '''Index fingertip detector model.
+    
+    Input: 128x128 RGB image
+    Output: 2x1 vector of fingertip coordinates (x, y) in range [0, 1]
+    '''
+
     def __init__(self):
         super(FingertipDetector, self).__init__()
         self.vgg16 = vgg16_bn(weights='DEFAULT')

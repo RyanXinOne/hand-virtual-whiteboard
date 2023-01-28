@@ -20,7 +20,7 @@ from test import _evaluate, _create_validation_data_loader
 MODEL_DEF = "config/yolov3-hagrid-3.cfg"
 PRETRAINED_WEIGHTS = "weights/hand/hagrid-3.pth"
 PRETRAINED_EPOCHS = 50
-EPOCHS = 50
+EPOCHS = 100
 BATCH_SIZE = 8
 DATA_CONFIG = "config/hagrid-3.data"
 MULTISCALE_TRAINING = False
@@ -31,6 +31,7 @@ NMS_THRES = 0.4
 CHECKPOINT_INTERVAL = 1
 EVALUATION_INTERVAL = 1
 LOG_DIR = "logs/"
+CHECKPOINT_DIR = "checkpoints/hand"
 SEED = -1
 VERBOSE = False
 
@@ -74,7 +75,7 @@ if __name__ == "__main__":
     logger = Logger(LOG_DIR)  # Tensorboard logger
 
     # Create checkpoints directory if missing
-    os.makedirs("checkpoints", exist_ok=True)
+    os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
     # Get data configuration
     data_config = parse_data_config(DATA_CONFIG)
@@ -238,6 +239,6 @@ if __name__ == "__main__":
 
         # Save model to checkpoint file
         if epoch % CHECKPOINT_INTERVAL == 0:
-            checkpoint_path = f"checkpoints/yolov3_ckpt_{epoch}_map{AP.mean():.5f}.pth"
+            checkpoint_path = os.path.join(CHECKPOINT_DIR, f"yolov3_ckpt_{epoch}_map{AP.mean():.5f}.pth")
             print(f"---- Saving checkpoint to: '{checkpoint_path}' ----")
             torch.save(model.state_dict(), checkpoint_path)

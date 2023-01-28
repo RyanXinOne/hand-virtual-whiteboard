@@ -1,4 +1,4 @@
 classes=3
-train=D:/Datasets/HaGRID/train.txt
-valid=D:/Datasets/HaGRID/test.txt
-names=D:/Datasets/HaGRID/hagrid.names
+train=D:/Datasets/HaGRID/hagrid-3/train.txt
+valid=D:/Datasets/HaGRID/hagrid-3/test.txt
+names=D:/Datasets/HaGRID/hagrid-3/hagrid-3.names
