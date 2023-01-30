@@ -1,5 +1,5 @@
 import torch.nn as nn
-from torchvision.models import vgg16_bn
+from torchvision.models import vgg16
 from utils import device
 
 
@@ -12,13 +12,13 @@ class FingertipDetector(nn.Module):
 
     def __init__(self):
         super(FingertipDetector, self).__init__()
-        self.vgg16 = vgg16_bn(weights='DEFAULT')
+        self.vgg16 = vgg16(weights='DEFAULT')
         self.vgg16.classifier = nn.Sequential(
             nn.Linear(512 * 7 * 7, 1024),
             nn.ReLU(),
-            nn.Linear(1024, 512),
+            nn.Linear(1024, 1024),
             nn.ReLU(),
-            nn.Linear(512, 2),
+            nn.Linear(1024, 2),
             nn.Sigmoid()
         )
 

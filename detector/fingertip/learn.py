@@ -10,7 +10,7 @@ from utils import device
 
 EPOCHS = 10
 BATCH_SIZE = 64
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.001
 PRETRAINED_WEIGHTS = ""
 PRETRAINED_EPOCHS = 0
 CHECKPOINT_DIR = "checkpoints/fingertip"
@@ -23,10 +23,11 @@ test_dataloader = DataLoader(Hagrid3IndexFingertipDataset(dataset='test'), batch
 
 model = FingertipDetector().to(device)
 loss_fn = nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
+optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
 
 if PRETRAINED_WEIGHTS:
     model.load_state_dict(torch.load(PRETRAINED_WEIGHTS))
+    print(f"Loaded weights from '{PRETRAINED_WEIGHTS}'")
 else:
     # initialize weights
     for m in model.modules():
@@ -37,6 +38,7 @@ else:
 
 def train_loop():
     model.train()
+    batch_num = len(train_dataloader)
     size = len(train_dataloader.dataset)
     for batch, (X, y) in enumerate(train_dataloader):
         pred = model(X)
@@ -48,7 +50,7 @@ def train_loop():
 
         if (batch + 1) % 50 == 0:
             loss, current = loss.item(), (batch + 1) * len(X)
-            print(f"loss: {loss:>6f}  [{current:>5d}/{size:>5d}]")
+            print(f"loss: {loss:>6f} | {batch+1}/{batch_num}[{current}/{size}]")
 
 
 def test_loop():
@@ -66,8 +68,10 @@ def test_loop():
 
 for e in range(PRETRAINED_EPOCHS, EPOCHS):
     e += 1
-    print(f"Epoch {e}\n-------------------------------")
+    print(f"Epoch {e}/{EPOCHS}\n-------------------------------")
     train_loop()
     test_loss = test_loop()
     # save checkpoint
-    torch.save(model.state_dict(), os.path.join(CHECKPOINT_DIR, f"fingertip_model_ckpt{e}_loss{test_loss:>6f}.pt"))
+    ckpt_path = os.path.join(CHECKPOINT_DIR, f"fingertip_model_ckpt{e}_loss{test_loss:>6f}.pt")
+    torch.save(model.state_dict(), ckpt_path)
+    print(f"Saved checkpoint to '{ckpt_path}'")
