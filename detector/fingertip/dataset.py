@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 import numpy as np
 from PIL import Image
 from PIL import ImageFile
-from utils import device, pad_to_square, resize
+from utils import device, pad_to_square_image, resize_image, crop_image, transform_coordinate_without_padding
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -50,30 +50,27 @@ class Hagrid3IndexFingertipDataset(Dataset):
         o_tip_x, o_tip_y = anno['index_finger_tips'][0]
 
         # crop image
-        abs_lx, abs_ly, abs_w, abs_h = int(lx * img.shape[1]), int(ly * img.shape[0]), int(w * img.shape[1]), int(h * img.shape[0])
-        img = img[abs_ly:abs_ly+abs_h, abs_lx:abs_lx+abs_w]
+        img = crop_image(img, lx, ly, w, h)
 
         # transform image
         img = transforms.ToTensor()(img)
-        img, abs_pad = pad_to_square(img)
-        img = resize(img, self.IMAGE_SIZE)
+        img, abs_pad = pad_to_square_image(img)
+        img = resize_image(img, self.IMAGE_SIZE)
 
         # transform fingertip coordinate
         tip_x, tip_y = (o_tip_x - lx) / w, (o_tip_y - ly) / h
         if not (tip_x >= 0 and tip_x < 1 and tip_y >= 0 and tip_y < 1):
             # print(f"Invalid fingertip coordinate of image '{img_name}'.")
             return
-        abs_tip_x = tip_x * (img.shape[2] - abs_pad[0] - abs_pad[1]) + abs_pad[0]
-        abs_tip_y = tip_y * (img.shape[1] - abs_pad[2] - abs_pad[3]) + abs_pad[2]
-        tip_x, tip_y = abs_tip_x / img.shape[2], abs_tip_y / img.shape[1]
+        tip_x, tip_y = transform_coordinate_without_padding(tip_x, tip_y, img.shape[2], img.shape[1], abs_pad)
         coords = torch.tensor([tip_x, tip_y], dtype=torch.float32)
 
-        return img.to(device), coords.to(device)
+        return img.to(device), coords.to(device), abs_pad
 
     @classmethod
     def collate_fn(cls, batch):
         # drop invalid samples
-        batch = [sample for sample in batch if sample is not None]
+        batch = [(sample[0], sample[1]) for sample in batch if sample is not None]
 
         return default_collate(batch)
 
