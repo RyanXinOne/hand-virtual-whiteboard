@@ -54,8 +54,8 @@ class Hagrid3IndexFingertipDataset(Dataset):
 
         # transform image
         img = transforms.ToTensor()(img)
-        img, abs_pad = pad_to_square_image(img)
         img = resize_image(img, self.IMAGE_SIZE)
+        img, abs_pad = pad_to_square_image(img)
 
         # transform fingertip coordinate
         tip_x, tip_y = (o_tip_x - lx) / w, (o_tip_y - ly) / h
@@ -78,7 +78,15 @@ class Hagrid3IndexFingertipDataset(Dataset):
 if __name__ == '__main__':
     from tqdm import tqdm
     from torch.utils.data import DataLoader
+    import cv2
+    from PIL import Image
     dataset = Hagrid3IndexFingertipDataset()
-    dl = DataLoader(dataset, batch_size=16, shuffle=False, collate_fn=Hagrid3IndexFingertipDataset.collate_fn)
-    for img, coords in tqdm(dl):
-        pass
+    dl = DataLoader(dataset, batch_size=1, shuffle=False, collate_fn=Hagrid3IndexFingertipDataset.collate_fn)
+    for imgs, cords in tqdm(dl):
+        img, cord = imgs[0], cords[0]
+        img = transforms.ToPILImage()(img)
+        img = np.array(img)
+        abs_cord_x, abs_cord_y = int(cord[0].item() * img.shape[1]), int(cord[1].item() * img.shape[0])
+        cv2.circle(img, (abs_cord_x, abs_cord_y), 3, (255, 0, 0), -1)
+        img = Image.fromarray(img)
+        img.show()

@@ -44,16 +44,20 @@ def remove_padding(image, abs_pad):
 
 
 def resize_image(image, size):
-    '''Resize a square image.
+    '''Resize a image by proportional scaling.
 
     Args:
         image (Tensor): Image to be resized.
-        size (int): Size of the resized square image.
+        size (int): Length of the longest side of resized image.
 
     Returns:
         Tensor: Resized image.
     '''
-    image = F.interpolate(image.unsqueeze(0), size=size, mode="nearest").squeeze(0)
+    if image.shape[1] > image.shape[2]:
+        target_size = (size, int(size * image.shape[2] / image.shape[1]))
+    else:
+        target_size = (int(size * image.shape[1] / image.shape[2]), size)
+    image = F.interpolate(image.unsqueeze(0), size=target_size, mode="nearest").squeeze(0)
     return image
 
 
