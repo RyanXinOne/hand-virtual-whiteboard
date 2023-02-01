@@ -10,7 +10,7 @@ from utils import device
 
 EPOCHS = 20
 BATCH_SIZE = 64
-LEARNING_RATE = 0.0001
+LEARNING_RATE = 0.01
 PRETRAINED_WEIGHTS = ""
 PRETRAINED_EPOCHS = 0
 CHECKPOINT_DIR = "checkpoints/fingertip"
@@ -68,11 +68,16 @@ def test_loop():
 
 for e in range(PRETRAINED_EPOCHS, EPOCHS):
     e += 1
+    # decrease learning rate
+    if e in (6, 11, 16):
+        LEARNING_RATE /= 5
+        optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
+        print(f'Decreasing learning rate to {LEARNING_RATE}')
     print(f"Epoch {e}/{EPOCHS}\n-------------------------------")
     train_loop()
     test_loss = test_loop()
     # save checkpoint
-    ckpt_path = os.path.join(CHECKPOINT_DIR, f"fingertip_model_ckpt{e}_loss{test_loss:>6f}.pt")
+    ckpt_path = os.path.join(CHECKPOINT_DIR, f"fingertip_model_ckpt{e}_loss{test_loss:>6f}.pth")
     torch.save(model.state_dict(), ckpt_path)
     print(f"Saved checkpoint to '{ckpt_path}'")
     print()
