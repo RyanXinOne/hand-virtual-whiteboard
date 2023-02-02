@@ -33,7 +33,7 @@ def detect_image(model, image, image_size=128):
     with torch.no_grad():
         pred = model(image.unsqueeze(0)).squeeze(0)
     # transform coordinates back
-    pred_x, pred_y = transform_coordinate_with_padding(pred[0].item(), pred[1].item(), image.shape[1], image.shape[0], abs_pad)
+    pred_x, pred_y = transform_coordinate_with_padding(pred[0].item(), pred[1].item(), image.shape[2], image.shape[1], abs_pad)
     return (pred_x, pred_y)
 
 
@@ -74,4 +74,4 @@ if __name__ == "__main__":
         X, y, img_name = sample
         pred = detect_image(model, X)
         X, y = np.array(transforms.ToPILImage()(X)), y.tolist()
-        draw_and_save_output_image(X, pred, os.path.join(OUTPUT_DIR, f"{i}.jpg"), label=y)
+        draw_and_save_output_image(X, pred, os.path.join(OUTPUT_DIR, f"{img_name}.jpg"), label=y)

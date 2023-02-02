@@ -103,13 +103,13 @@ def transform_coordinate_with_padding(in_x, in_y, img_width, img_height, abs_pad
 
     Args:
         in_x, in_y (float): Relative coordinates [0, 1] to be transformed.
-        img_width (int): Width of the unpadded image.
-        img_height (int): Height of the unpadded image.
+        img_width (int): Width of the padded image.
+        img_height (int): Height of the padded image.
         abs_pad (tuple): Absolute padding (l, r, t, b) of the image.
 
     Returns:
         out_x, out_y (float): Transformed relative coordinates.
     '''
-    out_x = (in_x * (img_width + abs_pad[0] + abs_pad[1]) - abs_pad[0]) / img_width
-    out_y = (in_y * (img_height + abs_pad[2] + abs_pad[3]) - abs_pad[2]) / img_height
+    out_x = (in_x * img_width - abs_pad[0]) / (img_width - abs_pad[0] - abs_pad[1])
+    out_y = (in_y * img_height - abs_pad[2]) / (img_height - abs_pad[2] - abs_pad[3])
     return out_x, out_y
