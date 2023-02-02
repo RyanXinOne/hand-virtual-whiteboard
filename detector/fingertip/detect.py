@@ -1,44 +1,77 @@
 import os
 from tqdm import tqdm
-import numpy as np
 from PIL import Image
+import numpy as np
 import cv2
 import torch
 import torchvision.transforms as transforms
 from model import FingertipDetector
 from dataset import Hagrid3IndexFingertipDataset
-from utils import device, remove_padding, transform_coordinate_with_padding
+from utils import device, resize_image, pad_to_square_image, transform_coordinate_with_padding
 
 
-PRETRAINED_WEIGHTS = "weights/fingertip/hagrid-3-fingertip.pt"
-OUTPUT_DIR = "output/"
+PRETRAINED_WEIGHTS = "weights/fingertip/hagrid-3-fingertip.pth"
+OUTPUT_DIR = "output/fingertip"
 
 
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+def detect_image(model, image, image_size=128):
+    '''Detect index fingertip in a single image.
 
-sample_dataset = Hagrid3IndexFingertipDataset(dataset='subsample')
+    Args:
+        model (nn.Module): model to use for detection
+        image (tensor): image to detect
+        image_size (int): size of the image to be fed into the model
 
-model = FingertipDetector().to(device)
-if PRETRAINED_WEIGHTS:
-    model.load_state_dict(torch.load(PRETRAINED_WEIGHTS))
-    print(f"Loaded weights from '{PRETRAINED_WEIGHTS}'")
+    Returns:
+        (tuple): predicted relative coordinates of the index fingertip
+    '''
+    # transform image
+    image = resize_image(image, image_size)
+    image, abs_pad = pad_to_square_image(image)
+    # model evaluation
+    model.eval()
+    with torch.no_grad():
+        pred = model(image.unsqueeze(0)).squeeze(0)
+    # transform coordinates back
+    pred_x, pred_y = transform_coordinate_with_padding(pred[0].item(), pred[1].item(), image.shape[1], image.shape[0], abs_pad)
+    return (pred_x, pred_y)
 
-model.eval()
-with torch.no_grad():
-    for i, (X, y, abs_pad) in tqdm(enumerate(sample_dataset)):
-        pred = model(X.unsqueeze(0)).squeeze(0)
 
-        img = transforms.ToPILImage()(X)
-        img = np.array(img)
-        # remove padding
-        img = remove_padding(img, abs_pad)
-        # transform coordinates
-        cord_x, cord_y = transform_coordinate_with_padding(y[0].item(), y[1].item(), img.shape[1], img.shape[0], abs_pad)
-        pred_x, pred_y = transform_coordinate_with_padding(pred[0].item(), pred[1].item(), img.shape[1], img.shape[0], abs_pad)
-        # calculate absolute coordinates
-        abs_cord_x, abs_cord_y = int(cord_x * img.shape[1]), int(cord_y * img.shape[0])
-        abs_pred_x, abs_pred_y = int(pred_x * img.shape[1]), int(pred_y * img.shape[0])
-        img = cv2.circle(img, (abs_cord_x, abs_cord_y), 3, (255, 0, 0), -1)
-        img = cv2.circle(img, (abs_pred_x, abs_pred_y), 3, (0, 0, 255), -1)
-        img = Image.fromarray(img)
-        img.save(os.path.join(OUTPUT_DIR, f"sample{i}.jpg"))
+def draw_and_save_output_image(image, detection, output_path, label=None):
+    '''Draw predicted and ground truth coordinates on the image and save it.
+
+    Args:
+        image (np.array): image to draw on
+        detection (tuple): predicted relative coordinates of the index fingertip
+        output_path (str): path to save the image
+        label (tuple): ground truth relative coordinates of the index fingertip
+    '''
+    # draw marker
+    if label is not None:
+        abs_cord_x, abs_cord_y = int(label[0] * image.shape[1]), int(label[1] * image.shape[0])
+        image = cv2.circle(image, (abs_cord_x, abs_cord_y), 3, (255, 0, 0), -1)
+    # calculate absolute coordinates
+    abs_pred_x, abs_pred_y = int(detection[0] * image.shape[1]), int(detection[1] * image.shape[0])
+    image = cv2.circle(image, (abs_pred_x, abs_pred_y), 3, (0, 0, 255), -1)
+    # save image
+    image = Image.fromarray(image)
+    image.save(output_path)
+
+
+if __name__ == "__main__":
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    sample_dataset = Hagrid3IndexFingertipDataset(dataset='subsample', learning=False)
+
+    model = FingertipDetector().to(device)
+    if PRETRAINED_WEIGHTS:
+        model.load_state_dict(torch.load(PRETRAINED_WEIGHTS))
+        print(f"Loaded weights from '{PRETRAINED_WEIGHTS}'")
+
+    for i, sample in tqdm(enumerate(sample_dataset)):
+        if sample is None:
+            continue
+        X, y, img_name = sample
+        pred = detect_image(model, X)
+        X, y = np.array(transforms.ToPILImage()(X)), y.tolist()
+        draw_and_save_output_image(X, pred, os.path.join(OUTPUT_DIR, f"{i}.jpg"), label=y)

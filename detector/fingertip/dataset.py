@@ -6,7 +6,7 @@ import torchvision.transforms as transforms
 import numpy as np
 from PIL import Image
 from PIL import ImageFile
-from utils import device, pad_to_square_image, resize_image, crop_image, transform_coordinate_without_padding
+from utils import device, crop_image, resize_image, pad_to_square_image, transform_coordinate_without_padding
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -18,12 +18,18 @@ class Hagrid3IndexFingertipDataset(Dataset):
     IMAGES_DIR = 'D:/Datasets/HaGRID/hagrid-3/images'
     IMAGE_SIZE = 128
 
-    def __init__(self, dataset='train'):
+    def __init__(self, dataset='train', learning=True):
+        '''
+        Args:
+            dataset (str): 'train', 'test', 'subsample'
+            learning (bool): if True, pre-transformation is applied for learning, including resizing and padding
+        '''
         if dataset not in ('train', 'test', 'subsample'):
             raise ValueError(f"Invalid dataset '{dataset}'.")
         self.dataset = dataset
         self.img_names = os.listdir(os.path.join(self.ANNOTATIONS_DIR, self.dataset))
         self.img_names = [os.path.splitext(img_name)[0] for img_name in self.img_names]
+        self.learning = learning
 
     def __len__(self):
         return len(self.img_names)
@@ -52,20 +58,24 @@ class Hagrid3IndexFingertipDataset(Dataset):
         # crop image
         img = crop_image(img, lx, ly, w, h)
 
-        # transform image
+        # prepare data, label
         img = transforms.ToTensor()(img)
-        img = resize_image(img, self.IMAGE_SIZE)
-        img, abs_pad = pad_to_square_image(img)
-
-        # transform fingertip coordinate
         tip_x, tip_y = (o_tip_x - lx) / w, (o_tip_y - ly) / h
         if not (tip_x >= 0 and tip_x < 1 and tip_y >= 0 and tip_y < 1):
             # print(f"Invalid fingertip coordinate of image '{img_name}'.")
             return
-        tip_x, tip_y = transform_coordinate_without_padding(tip_x, tip_y, img.shape[2], img.shape[1], abs_pad)
+
+        if self.learning:
+            # transform image
+            img = resize_image(img, self.IMAGE_SIZE)
+            img, abs_pad = pad_to_square_image(img)
+
+            # transform fingertip coordinate
+            tip_x, tip_y = transform_coordinate_without_padding(tip_x, tip_y, img.shape[2], img.shape[1], abs_pad)
+
         coords = torch.tensor([tip_x, tip_y], dtype=torch.float32)
 
-        return img.to(device), coords.to(device), abs_pad
+        return img.to(device), coords.to(device), img_name
 
     @classmethod
     def collate_fn(cls, batch):
@@ -80,7 +90,7 @@ if __name__ == '__main__':
     from torch.utils.data import DataLoader
     import cv2
     from PIL import Image
-    dataset = Hagrid3IndexFingertipDataset()
+    dataset = Hagrid3IndexFingertipDataset(dataset='subsample', learning=True)
     dl = DataLoader(dataset, batch_size=1, shuffle=False, collate_fn=Hagrid3IndexFingertipDataset.collate_fn)
     for imgs, cords in tqdm(dl):
         img, cord = imgs[0], cords[0]
