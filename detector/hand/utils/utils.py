@@ -1,13 +1,11 @@
 import time
-import platform
+import random
 import tqdm
+import imgaug as ia
+import numpy as np
 import torch
 import torch.nn as nn
 import torchvision
-import numpy as np
-import subprocess
-import random
-import imgaug as ia
 
 
 def provide_determinism(seed=42):

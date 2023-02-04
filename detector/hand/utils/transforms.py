@@ -1,12 +1,11 @@
-import torch
-import torch.nn.functional as F
-import numpy as np
-
 import imgaug.augmenters as iaa
 from imgaug.augmentables.bbs import BoundingBox, BoundingBoxesOnImage
-
-from .utils import xywh2xyxy_np
+import numpy as np
+import torch
+import torch.nn.functional as F
 import torchvision.transforms as transforms
+
+from hand.utils.utils import xywh2xyxy_np
 
 
 class ImgAug(object):

@@ -1,12 +1,13 @@
 import os
 import json
+from PIL import Image
+from PIL import ImageFile
+import numpy as np
 import torch
 from torch.utils.data import Dataset, default_collate
 import torchvision.transforms as transforms
-import numpy as np
-from PIL import Image
-from PIL import ImageFile
-from utils import device, crop_image, resize_image, pad_to_square_image, transform_coordinate_without_padding
+
+from fingertip.utils import device, crop_image, resize_image, pad_to_square_image, transform_coordinate_without_padding
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -100,3 +101,4 @@ if __name__ == '__main__':
         cv2.circle(img, (abs_cord_x, abs_cord_y), 3, (255, 0, 0), -1)
         img = Image.fromarray(img)
         img.show()
+        break

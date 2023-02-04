@@ -1,23 +1,21 @@
 import os
 import random
 import tqdm
-import numpy as np
-
 from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.ticker import NullLocator
-
+import numpy as np
 import torch
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 
-from models import load_model
-from utils.utils import load_classes, rescale_boxes, non_max_suppression
-from utils.datasets import ImageFolder
-from utils.transforms import Resize, DEFAULT_TRANSFORMS
-from utils.parse_config import parse_data_config
+from hand.models import load_model
+from hand.utils.utils import load_classes, rescale_boxes, non_max_suppression
+from hand.utils.datasets import ImageFolder
+from hand.utils.transforms import Resize, DEFAULT_TRANSFORMS
+from hand.utils.parse_config import parse_data_config
 
 
 MODEL_DEF = "config/yolov3-hagrid-3.cfg"

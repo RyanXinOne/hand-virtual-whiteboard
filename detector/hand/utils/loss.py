@@ -1,9 +1,8 @@
 import math
-
 import torch
 import torch.nn as nn
 
-from .utils import to_cpu
+from hand.utils.utils import to_cpu
 
 # This new loss function is based on https://github.com/ultralytics/yolov3/blob/master/utils/loss.py
 

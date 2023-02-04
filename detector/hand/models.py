@@ -1,13 +1,12 @@
-from itertools import chain
 import os
-
+from itertools import chain
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
 
-from utils.parse_config import parse_model_config
-from utils.utils import weights_init_normal
+from hand.utils.parse_config import parse_model_config
+from hand.utils.utils import weights_init_normal
 
 
 def create_modules(module_defs):

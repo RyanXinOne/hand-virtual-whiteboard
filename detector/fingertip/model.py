@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 from torchvision.models import vgg16
-from utils import device
+
+from fingertip.utils import device
 
 
 class FingertipDetector(nn.Module):

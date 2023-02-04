@@ -1,16 +1,15 @@
 import tqdm
 from terminaltables import AsciiTable
 import numpy as np
-
 import torch
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 
-from models import load_model
-from utils.utils import load_classes, ap_per_class, get_batch_statistics, non_max_suppression, xywh2xyxy
-from utils.datasets import ListDataset
-from utils.transforms import DEFAULT_TRANSFORMS
-from utils.parse_config import parse_data_config
+from hand.models import load_model
+from hand.utils.utils import load_classes, ap_per_class, get_batch_statistics, non_max_suppression, xywh2xyxy
+from hand.utils.datasets import ListDataset
+from hand.utils.transforms import DEFAULT_TRANSFORMS
+from hand.utils.parse_config import parse_data_config
 
 
 MODEL_DEF = "config/yolov3-hagrid-3.cfg"

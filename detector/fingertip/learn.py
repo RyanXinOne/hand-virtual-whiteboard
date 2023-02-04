@@ -3,8 +3,9 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from dataset import Hagrid3IndexFingertipDataset
-from model import load_model
+
+from fingertip.dataset import Hagrid3IndexFingertipDataset
+from fingertip.model import load_model
 
 
 EPOCHS = 30

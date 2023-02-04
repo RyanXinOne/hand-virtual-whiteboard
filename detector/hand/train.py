@@ -2,19 +2,18 @@ import os
 import tqdm
 from terminaltables import AsciiTable
 from torchsummary import summary
-
 import torch
 from torch.utils.data import DataLoader
 import torch.optim as optim
 
-from models import load_model
-from utils.logger import Logger
-from utils.utils import to_cpu, load_classes, provide_determinism, worker_seed_set
-from utils.datasets import ListDataset
-from utils.augmentations import AUGMENTATION_TRANSFORMS
-from utils.parse_config import parse_data_config
-from utils.loss import compute_loss
-from test import _evaluate, _create_validation_data_loader
+from hand.models import load_model
+from hand.utils.logger import Logger
+from hand.utils.utils import to_cpu, load_classes, provide_determinism, worker_seed_set
+from hand.utils.datasets import ListDataset
+from hand.utils.augmentations import AUGMENTATION_TRANSFORMS
+from hand.utils.parse_config import parse_data_config
+from hand.utils.loss import compute_loss
+from hand.test import _evaluate, _create_validation_data_loader
 
 
 MODEL_DEF = "config/yolov3-hagrid-3.cfg"

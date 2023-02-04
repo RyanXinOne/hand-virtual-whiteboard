@@ -1,13 +1,13 @@
-from torch.utils.data import Dataset
-import torch.nn.functional as F
-import torch
+import os
 import glob
 import random
-import os
 import warnings
-import numpy as np
 from PIL import Image
 from PIL import ImageFile
+import numpy as np
+import torch
+import torch.nn.functional as F
+from torch.utils.data import Dataset
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 

@@ -1,13 +1,14 @@
 import os
 from tqdm import tqdm
 from PIL import Image
-import numpy as np
 import cv2
+import numpy as np
 import torch
 import torchvision.transforms as transforms
-from model import load_model
-from dataset import Hagrid3IndexFingertipDataset
-from utils import resize_image, pad_to_square_image, transform_coordinate_with_padding
+
+from fingertip.model import load_model
+from fingertip.dataset import Hagrid3IndexFingertipDataset
+from fingertip.utils import resize_image, pad_to_square_image, transform_coordinate_with_padding
 
 
 PRETRAINED_WEIGHTS = "weights/fingertip/hagrid-3-fingertip.pth"
