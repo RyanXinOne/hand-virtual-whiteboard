@@ -5,9 +5,9 @@ import numpy as np
 import cv2
 import torch
 import torchvision.transforms as transforms
-from model import FingertipDetector
+from model import load_model
 from dataset import Hagrid3IndexFingertipDataset
-from utils import device, resize_image, pad_to_square_image, transform_coordinate_with_padding
+from utils import resize_image, pad_to_square_image, transform_coordinate_with_padding
 
 
 PRETRAINED_WEIGHTS = "weights/fingertip/hagrid-3-fingertip.pth"
@@ -59,15 +59,10 @@ def draw_and_save_output_image(image, detection, output_path, label=None):
 
 
 if __name__ == "__main__":
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-
     sample_dataset = Hagrid3IndexFingertipDataset(dataset='subsample', learning=False)
+    model = load_model(weights_path=PRETRAINED_WEIGHTS)
 
-    model = FingertipDetector().to(device)
-    if PRETRAINED_WEIGHTS:
-        model.load_state_dict(torch.load(PRETRAINED_WEIGHTS))
-        print(f"Loaded weights from '{PRETRAINED_WEIGHTS}'")
-
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
     for i, sample in tqdm(enumerate(sample_dataset)):
         if sample is None:
             continue

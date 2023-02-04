@@ -3,14 +3,13 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from model import FingertipDetector
 from dataset import Hagrid3IndexFingertipDataset
-from utils import device
+from model import load_model
 
 
-EPOCHS = 20
+EPOCHS = 30
 BATCH_SIZE = 64
-LEARNING_RATE = 0.01
+LEARNING_RATE = 0.00001
 PRETRAINED_WEIGHTS = ""
 PRETRAINED_EPOCHS = 0
 CHECKPOINT_DIR = "checkpoints/fingertip"
@@ -21,19 +20,9 @@ os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 train_dataloader = DataLoader(Hagrid3IndexFingertipDataset(dataset='train'), batch_size=BATCH_SIZE, shuffle=True, collate_fn=Hagrid3IndexFingertipDataset.collate_fn)
 test_dataloader = DataLoader(Hagrid3IndexFingertipDataset(dataset='test'), batch_size=BATCH_SIZE, shuffle=True, collate_fn=Hagrid3IndexFingertipDataset.collate_fn)
 
-model = FingertipDetector().to(device)
+model = load_model(weights_path=PRETRAINED_WEIGHTS)
 loss_fn = nn.MSELoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
-
-if PRETRAINED_WEIGHTS:
-    model.load_state_dict(torch.load(PRETRAINED_WEIGHTS))
-    print(f"Loaded weights from '{PRETRAINED_WEIGHTS}'")
-else:
-    # initialize weights
-    for m in model.modules():
-        if isinstance(m, nn.Linear):
-            nn.init.xavier_uniform_(m.weight)
-            nn.init.zeros_(m.bias)
+def optim(): return torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
 
 
 def train_loop():
@@ -66,12 +55,13 @@ def test_loop():
     return test_loss
 
 
+optimizer = optim()
 for e in range(PRETRAINED_EPOCHS, EPOCHS):
     e += 1
     # decrease learning rate
     if e in (6, 11, 16):
         LEARNING_RATE /= 5
-        optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
+        optimizer = optim()
         print(f'Decreasing learning rate to {LEARNING_RATE}')
     print(f"Epoch {e}/{EPOCHS}\n-------------------------------")
     train_loop()
