@@ -44,7 +44,7 @@ def load_model(weights_path=None):
                 nn.init.zeros_(m.bias)
     else:
         model.load_state_dict(torch.load(weights_path, map_location=device))
-        print(f"Loaded weights from '{weights_path}'")
+        # print(f"Loaded weights from '{weights_path}'")
     return model
 
 

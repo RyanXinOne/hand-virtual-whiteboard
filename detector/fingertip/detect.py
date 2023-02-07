@@ -8,7 +8,7 @@ import torchvision.transforms as transforms
 
 from fingertip.model import load_model
 from fingertip.dataset import Hagrid3IndexFingertipDataset
-from fingertip.utils import resize_image, pad_to_square_image, transform_coordinate_with_padding
+from fingertip.utils import device, resize_image, pad_to_square_image, transform_coordinate_with_padding
 
 
 PRETRAINED_WEIGHTS = "weights/fingertip/hagrid-3-fingertip.pth"
@@ -20,12 +20,14 @@ def detect_image(model, image, image_size=128):
 
     Args:
         model (nn.Module): model to use for detection
-        image (tensor): image to detect
+        image (tensor|np.Array): image to detect
         image_size (int): size of the image to be fed into the model
 
     Returns:
         (tuple): predicted relative coordinates of the index fingertip
     '''
+    if isinstance(image, np.ndarray):
+        image = transforms.ToTensor()(image).to(device)
     # transform image
     image = resize_image(image, image_size)
     image, abs_pad = pad_to_square_image(image)
@@ -50,10 +52,10 @@ def draw_and_save_output_image(image, detection, output_path, label=None):
     # draw marker
     if label is not None:
         abs_cord_x, abs_cord_y = int(label[0] * image.shape[1]), int(label[1] * image.shape[0])
-        image = cv2.circle(image, (abs_cord_x, abs_cord_y), 3, (255, 0, 0), -1)
+        image = cv2.circle(image, (abs_cord_x, abs_cord_y), 1, (255, 0, 0), -1)
     # calculate absolute coordinates
     abs_pred_x, abs_pred_y = int(detection[0] * image.shape[1]), int(detection[1] * image.shape[0])
-    image = cv2.circle(image, (abs_pred_x, abs_pred_y), 3, (0, 0, 255), -1)
+    image = cv2.circle(image, (abs_pred_x, abs_pred_y), 1, (0, 0, 255), -1)
     # save image
     image = Image.fromarray(image)
     image.save(output_path)

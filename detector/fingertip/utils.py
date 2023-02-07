@@ -54,9 +54,9 @@ def resize_image(image, size):
         Tensor: Resized image.
     '''
     if image.shape[1] > image.shape[2]:
-        target_size = (size, int(size * image.shape[2] / image.shape[1]))
+        target_size = (size, max(int(size * image.shape[2] / image.shape[1]), 1))
     else:
-        target_size = (int(size * image.shape[1] / image.shape[2]), size)
+        target_size = (max(int(size * image.shape[1] / image.shape[2]), 1), size)
     image = F.interpolate(image.unsqueeze(0), size=target_size, mode="nearest").squeeze(0)
     return image
 
