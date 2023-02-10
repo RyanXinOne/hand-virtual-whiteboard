@@ -9,14 +9,18 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        canvas = WCanvas(self)
+        self.setCentralWidget(canvas)
+
         toolbar = self.addToolBar('Toolbar')
 
         cameraAct = QAction('Toggle Camera', self)
-        cameraAct.triggered.connect(self.close)
+        cameraAct.triggered.connect(canvas.toggleCamera)
         toolbar.addAction(cameraAct)
 
-        canvas = WCanvas(self)
-        self.setCentralWidget(canvas)
+        clearAct = QAction('Clear', self)
+        clearAct.triggered.connect(canvas.clear)
+        toolbar.addAction(clearAct)
 
         self.setWindowTitle('Hand Virtual Whiteboard')
         self.show()
