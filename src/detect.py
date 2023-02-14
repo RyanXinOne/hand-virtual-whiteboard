@@ -28,22 +28,26 @@ class DetectEngine:
         self.fingertip_model = load_fingertip_model(self.FINGERTIP_WEIGHTS)
 
     def detect(self, image):
+        '''Return fingertip position and hand bounding box, confidence and class. All coordinates are absolute values in floating numbers.
+        '''
         # hand detection
         detection = detect_hand(self.hand_model, image, conf_thres=self.CONF_THRES, nms_thres=self.NMS_THRES)
         if detection.shape[0] == 0:
             # no hand detected
             return None
         abs_x1, abs_y1, abs_x2, abs_y2, conf, cls_pred = detection[0]
-        abs_x1, abs_y1, abs_x2, abs_y2 = max(int(abs_x1), 0), max(int(abs_y1), 0), min(int(abs_x2), image.shape[1]), min(int(abs_y2), image.shape[0])
-        if abs_x1 >= abs_x2 or abs_y1 >= abs_y2:
+        abs_x1, abs_y1, abs_x2, abs_y2 = max(abs_x1, 0), max(abs_y1, 0), min(abs_x2, image.shape[1]), min(abs_y2, image.shape[0])
+
+        b_x1, b_y1, b_x2, b_y2 = int(abs_x1), int(abs_y1), int(abs_x2), int(abs_y2)
+        if b_x1 >= b_x2 or b_y1 >= b_y2:
             return None
 
         # crop hand
-        hand_image = image[abs_y1:abs_y2, abs_x1:abs_x2]
+        hand_image = image[b_y1:b_y2, b_x1:b_x2]
 
         # fingertip detection
         tip_x, tip_y = detect_fingertip(self.fingertip_model, hand_image)
-        abs_tip_x, abs_tip_y = int(tip_x * hand_image.shape[1]) + abs_x1, int(tip_y * hand_image.shape[0]) + abs_y1
+        abs_tip_x, abs_tip_y = tip_x * hand_image.shape[1] + b_x1, tip_y * hand_image.shape[0] + b_y1
 
         return abs_tip_x, abs_tip_y, abs_x1, abs_y1, abs_x2, abs_y2, conf, cls_pred
 
@@ -65,6 +69,7 @@ if __name__ == "__main__":
         detection = backend_engine.detect(image)
         if detection is not None:
             x, y, bx1, by1, bx2, by2, conf, cls_ = detection
+            x, y, bx1, by1, bx2, by2 = int(x), int(y), int(bx1), int(by1), int(bx2), int(by2)
             # draw fingertip
             image = cv2.circle(image, (x, y), 1, (0, 0, 255), -1)
             # draw bounding box

@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QMainWindow
 from PyQt6.QtGui import QAction
 
-from gui.canvas import WCanvas
+from gui.hcanvas import HCanvas
 
 
 class MainWindow(QMainWindow):
@@ -9,7 +9,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        canvas = WCanvas(self)
+        canvas = HCanvas(self)
         self.setCentralWidget(canvas)
 
         toolbar = self.addToolBar('Toolbar')

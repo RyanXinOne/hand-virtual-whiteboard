@@ -69,76 +69,25 @@ class WCanvas(QWidget):
         self.user_offset = QPoint(0, 0)
         self._updateAbsOffset()
 
-    def mousePressEvent(self, e):
-        self.pos0 = e.pos() + self.abs_offset
-        self._drawStroke(self.pos0)
-        self.update()
-
-    def mouseMoveEvent(self, e):
-        self.pos1 = e.pos() + self.abs_offset
-        self._drawStroke(self.pos0, self.pos1)
-        self.pos0 = self.pos1
-        self.update()
-
-    def resizeEvent(self, e):
-        self._updateAbsOffset()
-
-    def paintEvent(self, e):
-        target_rect = e.rect()
-        board_rect = QRect(self.abs_offset, self.size())
-        camera_rect = self._getValidCameraRect()
-        self.painter.begin(self)
-        # draw background
-        self.painter.drawPixmap(target_rect, self.background_board, board_rect)
-        # draw camera image
-        self.painter.drawImage(target_rect, self.camera_image, camera_rect)
-        # draw strokes
-        self.painter.drawPixmap(target_rect, self.strokes_board, board_rect)
-        self.painter.end()
-
-    def timerEvent(self, e):
-        self._updateCamera()
-        if not self.camera_image.isNull():
-            self.update()
-
-    def sizeHint(self):
-        return self.PREFERRED_SIZE
-
-    def _drawStroke(self, point0, point1=None):
-        '''Draw stroke point/line on strokes board.
+    def drawStroke(self, point0, point1=None):
+        '''Draw stroke point/line on strokes board, board offset is automatically applied.
         '''
         self.painter.begin(self.strokes_board)
         self.painter.setPen(self.pen)
+        point0 = point0 + self.abs_offset
         if point1 is None:
             self.painter.drawPoint(point0)
         else:
+            point1 = point1 + self.abs_offset
             self.painter.drawLine(point0, point1)
         self.painter.end()
 
-    def _updateAbsOffset(self):
-        '''Update absolute offset by base offset and user offset.
+    def getCameraImageArray(self):
+        '''Return camera image as np.ndarray in RGB format.
         '''
-        base_offset_size = self.MAX_SIZE / 2 - self.size() / 2
-        self.abs_offset = QPoint(base_offset_size.width(), base_offset_size.height()) + self.user_offset
+        return cv2.cvtColor(self.camera_array, cv2.COLOR_BGR2RGB)
 
-    def _updateCamera(self):
-        '''Read image from camera caption. Camera image is stored in camera_array as np.ndarray. Camera image is converted to QImage and stored in camera_image.
-        '''
-        # prepare camera ndarray
-        if self.camera.isOpened():
-            _, self.camera_array = self.camera.read()
-            self.camera_array = cv2.flip(self.camera_array, 1)
-            self.camera_array = cv2.cvtColor(self.camera_array, cv2.COLOR_BGR2RGB)
-        else:
-            self.camera_array = np.empty((0, 0, 3), dtype=np.uint8)
-
-        # prepare camera QImage
-        if self.show_camera:
-            self.camera_image = QImage(self.camera_array.data, self.camera_array.shape[1], self.camera_array.shape[0], QImage.Format.Format_RGB888)
-        else:
-            self.camera_image = QImage()
-
-    def _getValidCameraRect(self):
+    def getCameraRect(self):
         '''Return absolute rect indicating valid camera image area that is visible on canvas.
         '''
         if self.camera_image.isNull():
@@ -158,11 +107,69 @@ class WCanvas(QWidget):
             y = (self.camera_image.height() - h) // 2
             return QRect(x, y, w, h)
 
+    def mousePressEvent(self, e):
+        self.pos0 = e.pos()
+        self.drawStroke(self.pos0)
+        self.update()
+
+    def mouseMoveEvent(self, e):
+        self.pos1 = e.pos()
+        self.drawStroke(self.pos0, self.pos1)
+        self.pos0 = self.pos1
+        self.update()
+
+    def resizeEvent(self, e):
+        self._updateAbsOffset()
+
+    def paintEvent(self, e):
+        target_rect = e.rect()
+        board_rect = QRect(self.abs_offset, self.size())
+        camera_rect = self.getCameraRect()
+        self.painter.begin(self)
+        # draw background
+        self.painter.drawPixmap(target_rect, self.background_board, board_rect)
+        # draw camera image
+        self.painter.drawImage(target_rect, self.camera_image, camera_rect)
+        # draw strokes
+        self.painter.drawPixmap(target_rect, self.strokes_board, board_rect)
+        self.painter.end()
+
+    def timerEvent(self, e):
+        self._updateCamera()
+        if not self.camera_image.isNull():
+            self.update()
+
+    def sizeHint(self):
+        return self.PREFERRED_SIZE
+
+    def _updateAbsOffset(self):
+        '''Update absolute offset by base offset and user offset.
+        '''
+        base_offset_size = self.MAX_SIZE / 2 - self.size() / 2
+        self.abs_offset = QPoint(base_offset_size.width(), base_offset_size.height()) + self.user_offset
+
+    def _updateCamera(self):
+        '''Read image from camera caption. Camera image is stored in camera_array as np.ndarray. Camera image is converted to QImage and stored in camera_image.
+        '''
+        # prepare camera ndarray
+        if self.camera.isOpened():
+            _, self.camera_array = self.camera.read()
+            self.camera_array = cv2.flip(self.camera_array, 1)
+        else:
+            self.camera_array = np.empty((0, 0, 3), dtype=np.uint8)
+
+        # prepare camera QImage
+        if self.show_camera:
+            self.camera_image = QImage(self.camera_array.data, self.camera_array.shape[1], self.camera_array.shape[0], QImage.Format.Format_BGR888)
+        else:
+            self.camera_image = QImage()
+
 
 if __name__ == "__main__":
     import sys
     from PyQt6.QtWidgets import QApplication
     app = QApplication(sys.argv)
-    w = WCanvas()
-    w.show()
+    canvas = WCanvas()
+    canvas.toggleCamera()
+    canvas.show()
     sys.exit(app.exec())
