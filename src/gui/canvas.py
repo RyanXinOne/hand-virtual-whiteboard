@@ -82,29 +82,30 @@ class WCanvas(QWidget):
             self.painter.drawLine(point0, point1)
         self.painter.end()
 
-    def getCameraImageArray(self):
+    def getCameraArray(self):
         '''Return camera image as np.ndarray in RGB format.
         '''
         return cv2.cvtColor(self.camera_array, cv2.COLOR_BGR2RGB)
 
     def getCameraRect(self):
-        '''Return absolute rect indicating valid camera image area that is visible on canvas.
+        '''Return absolute rect indicating valid camera array area that can be visible on canvas. Regardless of camera image.
         '''
-        if self.camera_image.isNull():
+        if self.camera_array.size == 0:
             return QRect()
+        camera_w, camera_h = self.camera_array.shape[1], self.camera_array.shape[0]
         canvas_aspect_ratio = self.width() / self.height()
-        camera_aspect_ratio = self.camera_image.width() / self.camera_image.height()
+        camera_aspect_ratio = camera_w / camera_h
         if canvas_aspect_ratio < camera_aspect_ratio:
-            h = self.camera_image.height()
+            h = camera_h
             w = int(h * canvas_aspect_ratio)
-            x = (self.camera_image.width() - w) // 2
+            x = (camera_w - w) // 2
             y = 0
             return QRect(x, y, w, h)
         else:
-            w = self.camera_image.width()
+            w = camera_w
             h = int(w / canvas_aspect_ratio)
             x = 0
-            y = (self.camera_image.height() - h) // 2
+            y = (camera_h - h) // 2
             return QRect(x, y, w, h)
 
     def mousePressEvent(self, e):
@@ -121,6 +122,11 @@ class WCanvas(QWidget):
     def resizeEvent(self, e):
         self._updateAbsOffset()
 
+    def timerEvent(self, e):
+        self._updateCamera()
+        if not self.camera_image.isNull():
+            self.update()
+
     def paintEvent(self, e):
         target_rect = e.rect()
         board_rect = QRect(self.abs_offset, self.size())
@@ -133,11 +139,6 @@ class WCanvas(QWidget):
         # draw strokes
         self.painter.drawPixmap(target_rect, self.strokes_board, board_rect)
         self.painter.end()
-
-    def timerEvent(self, e):
-        self._updateCamera()
-        if not self.camera_image.isNull():
-            self.update()
 
     def sizeHint(self):
         return self.PREFERRED_SIZE
