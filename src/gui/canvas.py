@@ -1,8 +1,8 @@
 import numpy as np
 import cv2
 from PyQt6.QtWidgets import QWidget
-from PyQt6.QtGui import QPixmap, QImage, QPen, QPainter, QColorConstants
-from PyQt6.QtCore import Qt, QSize, QPoint, QRect
+from PyQt6.QtGui import QPixmap, QImage, QPen, QColorConstants, QPainter, QPainterPath
+from PyQt6.QtCore import Qt, QSize, QPoint, QPointF, QRect
 
 
 class WCanvas(QWidget):
@@ -12,6 +12,7 @@ class WCanvas(QWidget):
     MIN_SIZE = QSize(128, 128)
     MAX_SIZE = QSize(8192, 8192)
     PREFERRED_SIZE = QSize(640, 480)
+    MOUSE_STROKE_UNIT = 3  # 2->line, 3->quad curve, 4->cubic curve
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -69,17 +70,31 @@ class WCanvas(QWidget):
         self.user_offset = QPoint(0, 0)
         self._updateAbsOffset()
 
-    def drawStroke(self, point0, point1=None):
-        '''Draw stroke point/line on strokes board, board offset is automatically applied.
+    def drawStroke(self, point0, *points):
+        '''Draw strokes on board, board offset is automatically applied.
+
+        Type of stroke is depend on number of points given.
+        Points num:
+            1 - point
+            2 - straight line
+            3 - quadratic Bezier curve
+            4 - cubic Bezier curve
         '''
+        point0 = QPointF(point0 + self.abs_offset)
+        points = [QPointF(point + self.abs_offset) for point in points]
+        proceed_num = len(points)
         self.painter.begin(self.strokes_board)
         self.painter.setPen(self.pen)
-        point0 = point0 + self.abs_offset
-        if point1 is None:
+        path = QPainterPath(point0)
+        if proceed_num == 0:
             self.painter.drawPoint(point0)
+        elif proceed_num == 1:
+            path.lineTo(points[0])
+        elif proceed_num == 2:
+            path.quadTo(points[0], points[1])
         else:
-            point1 = point1 + self.abs_offset
-            self.painter.drawLine(point0, point1)
+            path.cubicTo(points[0], points[1], points[2])
+        self.painter.drawPath(path)
         self.painter.end()
 
     def getCameraArray(self):
@@ -109,14 +124,18 @@ class WCanvas(QWidget):
             return QRect(x, y, w, h)
 
     def mousePressEvent(self, e):
-        self.pos0 = e.pos()
-        self.drawStroke(self.pos0)
-        self.update()
+        self.mouse_points = [e.pos()]
 
     def mouseMoveEvent(self, e):
-        self.pos1 = e.pos()
-        self.drawStroke(self.pos0, self.pos1)
-        self.pos0 = self.pos1
+        self.mouse_points.append(e.pos())
+        if len(self.mouse_points) >= self.MOUSE_STROKE_UNIT:
+            self.drawStroke(*self.mouse_points)
+            self.mouse_points = self.mouse_points[-1:]
+            self.update()
+
+    def mouseReleaseEvent(self, e):
+        self.drawStroke(*self.mouse_points)
+        del self.mouse_points
         self.update()
 
     def resizeEvent(self, e):
