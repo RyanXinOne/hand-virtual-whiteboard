@@ -19,6 +19,8 @@ class WCanvas(QWidget):
 
         self.setMinimumSize(self.MIN_SIZE)
         self.setMaximumSize(self.MAX_SIZE)
+
+        self.setMouseTool('pen')
         self.resetOffset()
 
         self.background_board = QPixmap(self.MAX_SIZE)
@@ -32,15 +34,17 @@ class WCanvas(QWidget):
         self.camera = cv2.VideoCapture(0)
         self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.PREFERRED_SIZE.width())
         self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.PREFERRED_SIZE.height())
-
-        self.show_camera = False
-        self._updateCamera()
+        self.toggleCamera(False)
 
         self.startTimer(0)
 
-    def clear(self):
-        self.strokes_board.fill(QColorConstants.Transparent)
-        self.update()
+    def setMouseTool(self, tool):
+        '''Set mouse tool among ('pen', 'page').
+        '''
+        if tool in ('pen', 'page'):
+            self.mouse_tool = tool
+        else:
+            raise ValueError('Invalid mouse tool')
 
     def changeColor(self, color):
         self.pen.setColor(color)
@@ -48,14 +52,15 @@ class WCanvas(QWidget):
     def changeThickness(self, thickness):
         self.pen.setWidth(thickness)
 
-    def toImage(self):
-        pass
-
-    def toggleCamera(self):
+    def toggleCamera(self, state):
         '''Show/hide camera display on canvas.
         '''
-        self.show_camera = not self.show_camera
+        self.show_camera = state
         self._updateCamera()
+        self.update()
+
+    def clear(self):
+        self.strokes_board.fill(QColorConstants.Transparent)
         self.update()
 
     def updateOffset(self, point):
@@ -128,15 +133,23 @@ class WCanvas(QWidget):
 
     def mouseMoveEvent(self, e):
         self.mouse_points.append(e.pos())
-        if len(self.mouse_points) >= self.MOUSE_STROKE_UNIT:
-            self.drawStroke(*self.mouse_points)
+        if self.mouse_tool == 'pen':
+            if len(self.mouse_points) >= self.MOUSE_STROKE_UNIT:
+                self.drawStroke(*self.mouse_points)
+                self.mouse_points = self.mouse_points[-1:]
+                self.update()
+        elif self.mouse_tool == 'page':
+            self.updateOffset(self.mouse_points[-2] - self.mouse_points[-1])
             self.mouse_points = self.mouse_points[-1:]
             self.update()
 
     def mouseReleaseEvent(self, e):
-        self.drawStroke(*self.mouse_points)
+        if self.mouse_tool == 'pen':
+            self.drawStroke(*self.mouse_points)
+            self.update()
+        elif self.mouse_tool == 'page':
+            pass
         del self.mouse_points
-        self.update()
 
     def resizeEvent(self, e):
         self._updateAbsOffset()
@@ -190,6 +203,6 @@ if __name__ == "__main__":
     from PyQt6.QtWidgets import QApplication
     app = QApplication(sys.argv)
     canvas = WCanvas()
-    canvas.toggleCamera()
+    canvas.toggleCamera(True)
     canvas.show()
     sys.exit(app.exec())
