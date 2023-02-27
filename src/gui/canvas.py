@@ -5,7 +5,7 @@ from PyQt6.QtGui import QPixmap, QImage, QPen, QColorConstants, QPainter, QPaint
 from PyQt6.QtCore import Qt, QSize, QPoint, QPointF, QRect
 
 
-class WCanvas(QWidget):
+class Canvas(QWidget):
     """Widget canvas.
     """
     BACKGROUND_COLOR = QColorConstants.White
@@ -202,7 +202,7 @@ if __name__ == "__main__":
     import sys
     from PyQt6.QtWidgets import QApplication
     app = QApplication(sys.argv)
-    canvas = WCanvas()
+    canvas = Canvas()
     canvas.toggleCamera(True)
     canvas.show()
     sys.exit(app.exec())

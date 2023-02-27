@@ -2,11 +2,11 @@ from math import sqrt
 import numpy as np
 from PyQt6.QtCore import QPoint, QTimer
 
-from gui.canvas import WCanvas
+from gui.canvas import Canvas
 from detect import DetectEngine
 
 
-class HCanvas(WCanvas):
+class HandCanvas(Canvas):
     '''Canvas controlled by hand.
     '''
     HAND_STROKE_UNIT = 4
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     from PyQt6.QtWidgets import QApplication
     import sys
     app = QApplication(sys.argv)
-    canvas = HCanvas()
+    canvas = HandCanvas()
     canvas.toggleCamera()
     canvas.show()
     sys.exit(app.exec())
