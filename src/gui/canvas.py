@@ -27,6 +27,7 @@ class Canvas(QWidget):
         self.clearStrokes()
 
         self.pen = QPen(QColorConstants.Black, 5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+        self.eraser = QPen(QColorConstants.Transparent, 15, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
         self.painter = QPainter()
         self.setPaintingMode('draw')
         self.setMouseTool('pen')
@@ -49,10 +50,8 @@ class Canvas(QWidget):
     def setPaintingMode(self, mode):
         '''Set painting mode among ('draw', 'erase').
         '''
-        if mode == 'draw':
-            self.painting_mode = QPainter.CompositionMode.CompositionMode_SourceOver
-        elif mode == 'erase':
-            self.painting_mode = QPainter.CompositionMode.CompositionMode_Clear
+        if mode in ('draw', 'erase'):
+            self.painting_mode = mode
         else:
             raise ValueError('Invalid drawing mode')
 
@@ -61,6 +60,9 @@ class Canvas(QWidget):
 
     def setPenThickness(self, thickness):
         self.pen.setWidth(thickness)
+
+    def setEraserThickness(self, thickness):
+        self.eraser.setWidth(thickness)
 
     def setBackgroundColor(self, color):
         self.background_board.fill(color)
@@ -100,8 +102,12 @@ class Canvas(QWidget):
         points = [QPointF(point + self.abs_offset) for point in points]
         proceed_num = len(points)
         self.painter.begin(self.strokes_board)
-        self.painter.setCompositionMode(self.painting_mode)
-        self.painter.setPen(self.pen)
+        if self.painting_mode == 'draw':
+            self.painter.setPen(self.pen)
+            self.painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
+        elif self.painting_mode == 'erase':
+            self.painter.setPen(self.eraser)
+            self.painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
         path = QPainterPath(point0)
         if proceed_num == 0:
             self.painter.drawPoint(point0)
