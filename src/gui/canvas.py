@@ -8,7 +8,6 @@ from PyQt6.QtCore import Qt, QSize, QPoint, QPointF, QRect
 class Canvas(QWidget):
     """Widget canvas.
     """
-    BACKGROUND_COLOR = QColorConstants.White
     MIN_SIZE = QSize(128, 128)
     MAX_SIZE = QSize(8192, 8192)
     PREFERRED_SIZE = QSize(640, 480)
@@ -20,16 +19,17 @@ class Canvas(QWidget):
         self.setMinimumSize(self.MIN_SIZE)
         self.setMaximumSize(self.MAX_SIZE)
 
-        self.setMouseTool('pen')
         self.resetOffset()
 
         self.background_board = QPixmap(self.MAX_SIZE)
-        self.background_board.fill(self.BACKGROUND_COLOR)
+        self.setBackgroundColor(QColorConstants.White)
         self.strokes_board = QPixmap(self.MAX_SIZE)
-        self.strokes_board.fill(QColorConstants.Transparent)
+        self.clearStrokes()
 
         self.pen = QPen(QColorConstants.Black, 5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
         self.painter = QPainter()
+        self.setPaintingMode('draw')
+        self.setMouseTool('pen')
 
         self.camera = cv2.VideoCapture(0)
         self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.PREFERRED_SIZE.width())
@@ -46,22 +46,33 @@ class Canvas(QWidget):
         else:
             raise ValueError('Invalid mouse tool')
 
-    def changeColor(self, color):
+    def setPaintingMode(self, mode):
+        '''Set painting mode among ('draw', 'erase').
+        '''
+        if mode == 'draw':
+            self.painting_mode = QPainter.CompositionMode.CompositionMode_SourceOver
+        elif mode == 'erase':
+            self.painting_mode = QPainter.CompositionMode.CompositionMode_Clear
+        else:
+            raise ValueError('Invalid drawing mode')
+
+    def setPenColor(self, color):
         self.pen.setColor(color)
 
-    def changeThickness(self, thickness):
+    def setPenThickness(self, thickness):
         self.pen.setWidth(thickness)
+
+    def setBackgroundColor(self, color):
+        self.background_board.fill(color)
 
     def toggleCamera(self, state):
         '''Show/hide camera display on canvas.
         '''
         self.show_camera = state
         self._updateCamera()
-        self.update()
 
-    def clear(self):
+    def clearStrokes(self):
         self.strokes_board.fill(QColorConstants.Transparent)
-        self.update()
 
     def updateOffset(self, point):
         '''Update user offset by the amount of point.
@@ -89,6 +100,7 @@ class Canvas(QWidget):
         points = [QPointF(point + self.abs_offset) for point in points]
         proceed_num = len(points)
         self.painter.begin(self.strokes_board)
+        self.painter.setCompositionMode(self.painting_mode)
         self.painter.setPen(self.pen)
         path = QPainterPath(point0)
         if proceed_num == 0:

@@ -16,22 +16,45 @@ class MainWindow(QMainWindow):
 
         cameraAct = QAction('Toggle Camera', self)
         cameraAct.setCheckable(True)
-        cameraAct.toggled.connect(lambda: canvas.toggleCamera(cameraAct.isChecked()))
+        def cameraSlot():
+            canvas.toggleCamera(cameraAct.isChecked())
+            canvas.update()
+        cameraAct.toggled.connect(cameraSlot)
 
         clearAct = QAction('Clear', self)
-        clearAct.triggered.connect(canvas.clear)
+        def clearSlot():
+            canvas.clearStrokes()
+            canvas.update()
+        clearAct.triggered.connect(clearSlot)
 
         penAct = QAction('Pen', self)
         penAct.setCheckable(True)
-        penAct.toggled.connect(lambda: canvas.setMouseTool('pen') if penAct.isChecked() else None)
+        def penSlot():
+            if penAct.isChecked():
+                canvas.setMouseTool('pen')
+                canvas.setPaintingMode('draw')
+        penAct.toggled.connect(penSlot)
         penAct.setChecked(True)
+        
+        eraserAct = QAction('Eraser', self)
+        eraserAct.setCheckable(True)
+        def eraserSlot():
+            if eraserAct.isChecked():
+                canvas.setMouseTool('pen')
+                canvas.setPaintingMode('erase')
+        eraserAct.toggled.connect(eraserSlot)
+
         pageMoveAct = QAction('Page Move', self)
         pageMoveAct.setCheckable(True)
-        pageMoveAct.toggled.connect(lambda: canvas.setMouseTool('page') if pageMoveAct.isChecked() else None)
+        def pageMoveSlot():
+            if pageMoveAct.isChecked():
+                canvas.setMouseTool('page')
+        pageMoveAct.toggled.connect(pageMoveSlot)
 
         cvToolGroup = QActionGroup(self)
         cvToolGroup.setExclusive(True)
         cvToolGroup.addAction(penAct)
+        cvToolGroup.addAction(eraserAct)
         cvToolGroup.addAction(pageMoveAct)
 
         toolbar = self.addToolBar('Toolbar')
@@ -39,6 +62,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(clearAct)
         toolbar.addSeparator()
         toolbar.addAction(penAct)
+        toolbar.addAction(eraserAct)
         toolbar.addAction(pageMoveAct)
 
         # ===== Setup Window =====
