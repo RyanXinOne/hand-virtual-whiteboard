@@ -1,43 +1,25 @@
-from PyQt6.QtWidgets import QToolBar, QStackedLayout
+from PyQt6.QtWidgets import QToolBar, QStackedWidget
 
 
 class StackedToolbar(QToolBar):
     '''Provides a stack of toolbars where only one toolbar is visible at a time.
-
-    Following the public methods of QStackedWidget.
     '''
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.stack = QStackedLayout()
-        self.setLayout(self.stack)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.layout().setContentsMargins(0, 0, 0, 0)
 
-    def addWidget(self, widget):
-        self.stack.addWidget(widget)
+        self.stack = QStackedWidget(self)
+        self.addWidget(self.stack)
+        self.orientationChanged.connect(self._onOrientationChanged)
 
-    def count(self):
-        return self.stack.count()
+    def addToolbar(self, toolbar):
+        toolbar.setOrientation(self.orientation())
+        return self.stack.addWidget(toolbar)
 
-    def currentIndex(self):
-        return self.stack.currentIndex()
-
-    def currentWidget(self):
-        return self.stack.currentWidget()
-
-    def indexOf(self, widget):
-        return self.stack.indexOf(widget)
-
-    def insertWidget(self, index, widget):
-        self.stack.insertWidget(index, widget)
-
-    def removeWidget(self, widget):
-        self.stack.removeWidget(widget)
-
-    def widget(self, index):
-        return self.stack.widget(index)
-
-    def setCurrentIndex(self, index):
+    def switchToolbar(self, index):
         self.stack.setCurrentIndex(index)
 
-    def setCurrentWidget(self, widget):
-        self.stack.setCurrentWidget(widget)
+    def _onOrientationChanged(self, orientation):
+        for i in range(self.stack.count()):
+            self.stack.widget(i).setOrientation(orientation)
