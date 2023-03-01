@@ -27,7 +27,7 @@ class Canvas(QWidget):
         self.clearStrokes()
 
         self.pen = QPen(QColorConstants.Black, 5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
-        self.eraser = QPen(QColorConstants.Transparent, 15, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+        self.eraser = QPen(QColorConstants.Transparent, 25, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
         self.painter = QPainter()
         self.setPaintingMode('draw')
         self.setMouseTool('pen')

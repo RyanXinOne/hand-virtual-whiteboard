@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 from hand.models import load_model as load_hand_model
 from hand.detect import detect_image as detect_hand
+from hand.utils.parse_config import parse_data_config
+from hand.utils.utils import load_classes
 from fingertip.model import load_model as load_fingertip_model
 from fingertip.detect import detect_image as detect_fingertip
 
@@ -16,6 +18,7 @@ IMAGES_OUTPUT = "output/pipeline"
 
 
 class DetectEngine:
+    HAND_DATA_CONFIG = "config/hagrid-3.data"
     HAND_MODEL_DEF = "config/yolov3-hagrid-3.cfg"
     CONF_THRES = 0.1
     NMS_THRES = 0.4
@@ -26,6 +29,9 @@ class DetectEngine:
         # load models
         self.hand_model = load_hand_model(self.HAND_MODEL_DEF, self.HAND_WEIGHTS)
         self.fingertip_model = load_fingertip_model(self.FINGERTIP_WEIGHTS)
+
+        data_config = parse_data_config(self.HAND_DATA_CONFIG)
+        self.class_names = load_classes(data_config["names"])
 
     def detect(self, image):
         '''Return fingertip position and hand bounding box, confidence and class. All coordinates are absolute values in floating numbers.
@@ -50,6 +56,9 @@ class DetectEngine:
         abs_tip_x, abs_tip_y = tip_x * hand_image.shape[1] + b_x1, tip_y * hand_image.shape[0] + b_y1
 
         return abs_tip_x, abs_tip_y, abs_x1, abs_y1, abs_x2, abs_y2, conf, cls_pred
+
+    def classIndexToName(self, class_index):
+        return self.class_names[int(class_index)]
 
 
 if __name__ == "__main__":

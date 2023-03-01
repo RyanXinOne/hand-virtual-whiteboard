@@ -33,19 +33,19 @@ class MainWindow(QMainWindow):
             self.canvas.update()
 
         def penSlot():
-            if penAct.isChecked():
+            if self.penAct.isChecked():
                 self.canvas.setMouseTool('pen')
                 self.canvas.setPaintingMode('draw')
                 self.auxToolbar.switchToolbar(self.auxToolbarIds['pen'])
 
         def eraserSlot():
-            if eraserAct.isChecked():
+            if self.eraserAct.isChecked():
                 self.canvas.setMouseTool('pen')
                 self.canvas.setPaintingMode('erase')
                 self.auxToolbar.switchToolbar(self.auxToolbarIds['eraser'])
 
         def pageMoveSlot():
-            if pageMoveAct.isChecked():
+            if self.pageMoveAct.isChecked():
                 self.canvas.setMouseTool('page')
                 self.auxToolbar.switchToolbar(self.auxToolbarIds['empty'])
 
@@ -56,32 +56,32 @@ class MainWindow(QMainWindow):
         clearAct = QAction(QIcon('assets/clear.svg'), 'Clear', self)
         clearAct.triggered.connect(clearSlot)
 
-        penAct = QAction(QIcon('assets/pen.svg'), 'Pen', self)
-        penAct.setCheckable(True)
-        penAct.toggled.connect(penSlot)
+        self.penAct = QAction(QIcon('assets/pen.svg'), 'Pen', self)
+        self.penAct.setCheckable(True)
+        self.penAct.toggled.connect(penSlot)
 
-        eraserAct = QAction(QIcon('assets/eraser.svg'), 'Eraser', self)
-        eraserAct.setCheckable(True)
-        eraserAct.toggled.connect(eraserSlot)
+        self.eraserAct = QAction(QIcon('assets/eraser.svg'), 'Eraser', self)
+        self.eraserAct.setCheckable(True)
+        self.eraserAct.toggled.connect(eraserSlot)
 
-        pageMoveAct = QAction(QIcon('assets/hand.svg'), 'Pan around', self)
-        pageMoveAct.setCheckable(True)
-        pageMoveAct.toggled.connect(pageMoveSlot)
+        self.pageMoveAct = QAction(QIcon('assets/hand.svg'), 'Pan around', self)
+        self.pageMoveAct.setCheckable(True)
+        self.pageMoveAct.toggled.connect(pageMoveSlot)
 
         toolExcGroup = QActionGroup(self)
         toolExcGroup.setExclusive(True)
-        toolExcGroup.addAction(penAct)
-        toolExcGroup.addAction(eraserAct)
-        toolExcGroup.addAction(pageMoveAct)
-        penAct.setChecked(True)
+        toolExcGroup.addAction(self.penAct)
+        toolExcGroup.addAction(self.eraserAct)
+        toolExcGroup.addAction(self.pageMoveAct)
+        self.penAct.setChecked(True)
 
         mainToolbar = QToolBar('Main Toolbar', self)
         mainToolbar.addAction(cameraAct)
         mainToolbar.addAction(clearAct)
         mainToolbar.addSeparator()
-        mainToolbar.addAction(penAct)
-        mainToolbar.addAction(eraserAct)
-        mainToolbar.addAction(pageMoveAct)
+        mainToolbar.addAction(self.penAct)
+        mainToolbar.addAction(self.eraserAct)
+        mainToolbar.addAction(self.pageMoveAct)
 
         self.addToolBar(Qt.ToolBarArea.TopToolBarArea, mainToolbar)
 
@@ -155,6 +155,18 @@ class MainWindow(QMainWindow):
         self.auxToolbarIds['empty'] = self.auxToolbar.addToolbar(emptyToolbar)
 
         self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, self.auxToolbar)
+
+    def activatePen(self):
+        if not self.penAct.isChecked():
+            self.penAct.setChecked(True)
+
+    def activateEraser(self):
+        if not self.eraserAct.isChecked():
+            self.eraserAct.setChecked(True)
+
+    def activatePageMove(self):
+        if not self.pageMoveAct.isChecked():
+            self.pageMoveAct.setChecked(True)
 
 
 if __name__ == '__main__':

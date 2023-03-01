@@ -16,6 +16,7 @@ class HandCanvas(Canvas):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.main_window = parent
 
         self.engine = DetectEngine()
         # dry run to make engine prepared
@@ -39,26 +40,37 @@ class HandCanvas(Canvas):
         point_x = (x - rect.x()) * self.width() / rect.width()
         point_y = (y - rect.y()) * self.height() / rect.height()
         point = QPoint(int(point_x), int(point_y))
+        cls_name = self.engine.classIndexToName(cls_)
 
         isFirstPoint = not self.timer.isActive()
         self.timer.start(self.END_STROKE_IN_SEC * 1000)
         if isFirstPoint:
-            # start hand stroke
             self.hand_points = [point]
         else:
-            # continue hand stroke
-            if self._pointDistance(self.hand_points[-1], point) >= self.MINIMUM_STROKE_DISTANCE:
-                self.hand_points.append(point)
+            # filter out close points
+            if self._pointDistance(self.hand_points[-1], point) < self.MINIMUM_STROKE_DISTANCE:
+                return
+
+            self.hand_points.append(point)
+            if cls_name in ('one', 'two_up'):
+                if cls_name == 'one':
+                    self.main_window.activatePen()
+                else:
+                    self.main_window.activateEraser()
+                # pen stroke
                 if len(self.hand_points) >= self.HAND_STROKE_UNIT:
                     self.drawStroke(*self.hand_points)
                     self.hand_points = self.hand_points[-1:]
                     self.update()
+            elif cls_name == 'stop':
+                self.main_window.activatePageMove()
+                # page move
+                self.updateOffset(self.hand_points[-2] - self.hand_points[-1])
+                self.hand_points = self.hand_points[-1:]
+                self.update()
 
     def _endStroke(self):
-        # end hand stroke
-        # self.drawStroke(*self.hand_points)
         del self.hand_points
-        # self.update()
 
     def _pointDistance(self, p1, p2):
         return sqrt((p1.x() - p2.x()) ** 2 + (p1.y() - p2.y()) ** 2)
