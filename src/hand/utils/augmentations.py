@@ -27,9 +27,17 @@ class StrongAug(ImgAug):
         ])
 
 
-AUGMENTATION_TRANSFORMS = transforms.Compose([
+DEFAULT_AUGMENTATION_TRANSFORMS = transforms.Compose([
     AbsoluteLabels(),
     DefaultAug(),
+    PadSquare(),
+    RelativeLabels(),
+    ToTensor(),
+])
+
+STRONG_AUGMENTATION_TRANSFORMS = transforms.Compose([
+    AbsoluteLabels(),
+    StrongAug(),
     PadSquare(),
     RelativeLabels(),
     ToTensor(),

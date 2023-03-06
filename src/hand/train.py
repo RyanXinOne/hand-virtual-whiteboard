@@ -10,20 +10,20 @@ from hand.models import load_model
 from hand.utils.logger import Logger
 from hand.utils.utils import to_cpu, load_classes, provide_determinism, worker_seed_set
 from hand.utils.datasets import ListDataset
-from hand.utils.augmentations import AUGMENTATION_TRANSFORMS
+from hand.utils.augmentations import DEFAULT_AUGMENTATION_TRANSFORMS, STRONG_AUGMENTATION_TRANSFORMS
 from hand.utils.parse_config import parse_data_config
 from hand.utils.loss import compute_loss
 from hand.test import _evaluate, _create_validation_data_loader
 
 
-MODEL_DEF = "config/yolov3-hagrid-3.cfg"
-PRETRAINED_WEIGHTS = "weights/hand/hagrid-3.pth"
-PRETRAINED_EPOCHS = 50
-EPOCHS = 100
-BATCH_SIZE = 8
-DATA_CONFIG = "config/hagrid-3.data"
+MODEL_DEF = "config/yolov3-hagrid-13.cfg"
+PRETRAINED_WEIGHTS = "weights/hand/hagrid-3.conv.74"
+PRETRAINED_EPOCHS = 0
+EPOCHS = 200
+DATA_CONFIG = "config/hagrid-13.data"
+DATA_AUGMENTATION = "strong"
 MULTISCALE_TRAINING = False
-N_CPU = 12
+N_CPU = 8
 IOU_THRES = 0.5
 CONF_THRES = 0.1
 NMS_THRES = 0.4
@@ -35,7 +35,7 @@ SEED = -1
 VERBOSE = False
 
 
-def _create_data_loader(img_path, batch_size, img_size, n_cpu, multiscale_training=False):
+def _create_data_loader(img_path, batch_size, img_size, n_cpu, augmentation='default', multiscale_training=False):
     """Creates a DataLoader for training.
 
     :param img_path: Path to file containing all paths to training images.
@@ -55,7 +55,7 @@ def _create_data_loader(img_path, batch_size, img_size, n_cpu, multiscale_traini
         img_path,
         img_size=img_size,
         multiscale=multiscale_training,
-        transform=AUGMENTATION_TRANSFORMS)
+        transform=DEFAULT_AUGMENTATION_TRANSFORMS if augmentation == 'default' else STRONG_AUGMENTATION_TRANSFORMS)
     dataloader = DataLoader(
         dataset,
         batch_size=batch_size,
@@ -105,6 +105,7 @@ if __name__ == "__main__":
         mini_batch_size,
         model.hyperparams['height'],
         N_CPU,
+        DATA_AUGMENTATION,
         MULTISCALE_TRAINING)
 
     # Load validation dataloader
