@@ -9,7 +9,7 @@ from fingertip.model import load_model
 from fingertip.utils import device
 
 
-EPOCHS = 30
+EPOCHS = 40
 BATCH_SIZE = 64
 LEARNING_RATE = 0.001
 PRETRAINED_WEIGHTS = "weights/fingertip/hagrid-3-fingertip.pth"
@@ -62,11 +62,6 @@ if __name__ == "__main__":
     optimizer = optim()
     for e in range(PRETRAINED_EPOCHS, EPOCHS):
         e += 1
-        # decrease learning rate
-        if e in (6, 11, 16):
-            LEARNING_RATE /= 5
-            optimizer = optim()
-            print(f'Decreasing learning rate to {LEARNING_RATE}')
         print(f"Epoch {e}/{EPOCHS}\n-------------------------------")
         train_loop()
         test_loss = test_loop()

@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import Dataset, default_collate
 import torchvision.transforms as transforms
 
-from fingertip.utils import crop_image, resize_image, pad_to_square_image, transform_coordinate_without_padding
+from fingertip.utils import crop_image, resize_image, pad_to_square_image, transform_coordinate_without_padding, augment_image
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -74,6 +74,9 @@ class Hagrid3IndexFingertipDataset(Dataset):
             # transform fingertip coordinate
             tip_x, tip_y = transform_coordinate_without_padding(tip_x, tip_y, img.shape[2], img.shape[1], abs_pad)
 
+            # augment image
+            img, (tip_x, tip_y) = augment_image(img, (tip_x, tip_y))
+
         coords = torch.tensor([tip_x, tip_y], dtype=torch.float32)
 
         return img, coords, img_name
@@ -92,7 +95,7 @@ if __name__ == '__main__':
     import cv2
     from PIL import Image
     dataset = Hagrid3IndexFingertipDataset(dataset='subsample', learning=True)
-    dl = DataLoader(dataset, batch_size=1, shuffle=False, collate_fn=Hagrid3IndexFingertipDataset.collate_fn)
+    dl = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=Hagrid3IndexFingertipDataset.collate_fn)
     for imgs, cords in tqdm(dl):
         img, cord = imgs[0], cords[0]
         img = transforms.ToPILImage()(img)

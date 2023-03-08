@@ -1,6 +1,8 @@
+import imgaug.augmenters as iaa
 import numpy as np
 import torch
 import torch.nn.functional as F
+import torchvision.transforms as transforms
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -113,3 +115,36 @@ def transform_coordinate_with_padding(in_x, in_y, img_width, img_height, abs_pad
     out_x = (in_x * img_width - abs_pad[0]) / (img_width - abs_pad[0] - abs_pad[1])
     out_y = (in_y * img_height - abs_pad[2]) / (img_height - abs_pad[2] - abs_pad[3])
     return out_x, out_y
+
+
+augmentation = iaa.Sequential([
+    iaa.Dropout([0.0, 0.01]),
+    iaa.Sharpen((0.0, 0.1)),
+    iaa.Affine(rotate=(-30, 30), translate_percent=(-0.1, 0.1), scale=(0.8, 1.2)),
+    iaa.AddToBrightness((-60, 40)),
+    iaa.AddToHue((-20, 20)),
+    iaa.Fliplr(0.5),
+])
+
+
+def augment_image(image, keypoint):
+    '''Augment an image.
+
+    It is guaranteed that the keypoint is still in the image after augmentation.
+
+    Args:
+        image (Tensor): Image to be augmented.
+        keypoint (tuple): Keypoint of relative coordinates of the image.
+
+    Returns:
+        Tensor: Augmented image.
+        tuple: Relevant keypoint.
+    '''
+    image = np.array(transforms.ToPILImage()(image))
+    width, height = image.shape[1], image.shape[0]
+
+    n_keypoint = (-1, -1)
+    while not (n_keypoint[0] >= 0 and n_keypoint[0] < width and n_keypoint[1] >= 0 and n_keypoint[1] < height):
+        n_image, n_keypoint = augmentation(image=image, keypoints=(keypoint[0] * width, keypoint[1] * height))
+
+    return transforms.ToTensor()(n_image), (n_keypoint[0] / width, n_keypoint[1] / height)
