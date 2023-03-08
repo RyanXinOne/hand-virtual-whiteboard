@@ -135,13 +135,13 @@ class Canvas(QWidget):
         camera_aspect_ratio = camera_w / camera_h
         if canvas_aspect_ratio < camera_aspect_ratio:
             h = camera_h
-            w = int(h * canvas_aspect_ratio)
+            w = round(h * canvas_aspect_ratio)
             x = (camera_w - w) // 2
             y = 0
             return QRect(x, y, w, h)
         else:
             w = camera_w
-            h = int(w / canvas_aspect_ratio)
+            h = round(w / canvas_aspect_ratio)
             x = 0
             y = (camera_h - h) // 2
             return QRect(x, y, w, h)

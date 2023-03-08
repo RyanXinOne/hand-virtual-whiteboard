@@ -51,10 +51,10 @@ def draw_and_save_output_image(image, detection, output_path, label=None):
     '''
     # draw marker
     if label is not None:
-        abs_cord_x, abs_cord_y = int(label[0] * image.shape[1]), int(label[1] * image.shape[0])
+        abs_cord_x, abs_cord_y = round(label[0] * image.shape[1]), round(label[1] * image.shape[0])
         image = cv2.circle(image, (abs_cord_x, abs_cord_y), 1, (255, 0, 0), -1)
     # calculate absolute coordinates
-    abs_pred_x, abs_pred_y = int(detection[0] * image.shape[1]), int(detection[1] * image.shape[0])
+    abs_pred_x, abs_pred_y = round(detection[0] * image.shape[1]), round(detection[1] * image.shape[0])
     image = cv2.circle(image, (abs_pred_x, abs_pred_y), 1, (0, 0, 255), -1)
     # save image
     image = Image.fromarray(image)

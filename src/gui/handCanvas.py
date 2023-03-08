@@ -39,7 +39,7 @@ class HandCanvas(Canvas):
         rect = self.getCameraRect()
         point_x = (x - rect.x()) * self.width() / rect.width()
         point_y = (y - rect.y()) * self.height() / rect.height()
-        point = QPoint(int(point_x), int(point_y))
+        point = QPoint(round(point_x), round(point_y))
         cls_name = self.engine.classIndexToName(cls_)
 
         isFirstPoint = not self.timer.isActive()
@@ -81,6 +81,6 @@ if __name__ == '__main__':
     import sys
     app = QApplication(sys.argv)
     canvas = HandCanvas()
-    canvas.toggleCamera()
+    canvas.toggleCamera(True)
     canvas.show()
     sys.exit(app.exec())

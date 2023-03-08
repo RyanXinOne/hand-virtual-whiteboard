@@ -56,9 +56,9 @@ def resize_image(image, size):
         Tensor: Resized image.
     '''
     if image.shape[1] > image.shape[2]:
-        target_size = (size, max(int(size * image.shape[2] / image.shape[1]), 1))
+        target_size = (size, max(round(size * image.shape[2] / image.shape[1]), 1))
     else:
-        target_size = (max(int(size * image.shape[1] / image.shape[2]), 1), size)
+        target_size = (max(round(size * image.shape[1] / image.shape[2]), 1), size)
     image = F.interpolate(image.unsqueeze(0), size=target_size, mode="nearest").squeeze(0)
     return image
 
@@ -78,7 +78,7 @@ def crop_image(image, x, y, w, h, anchor='top-left'):
         x -= w / 2
         y -= h / 2
 
-    abs_x, abs_y, abs_w, abs_h = int(x * image.shape[1]), int(y * image.shape[0]), int(w * image.shape[1]), int(h * image.shape[0])
+    abs_x, abs_y, abs_w, abs_h = round(x * image.shape[1]), round(y * image.shape[0]), round(w * image.shape[1]), round(h * image.shape[0])
     image = image[abs_y:abs_y+abs_h, abs_x:abs_x+abs_w]
     return image
 

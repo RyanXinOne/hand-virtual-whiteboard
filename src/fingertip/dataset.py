@@ -100,7 +100,7 @@ if __name__ == '__main__':
         img, cord = imgs[0], cords[0]
         img = transforms.ToPILImage()(img)
         img = np.array(img)
-        abs_cord_x, abs_cord_y = int(cord[0].item() * img.shape[1]), int(cord[1].item() * img.shape[0])
+        abs_cord_x, abs_cord_y = round(cord[0].item() * img.shape[1]), round(cord[1].item() * img.shape[0])
         cv2.circle(img, (abs_cord_x, abs_cord_y), 3, (255, 0, 0), -1)
         img = Image.fromarray(img)
         img.show()
