@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import Dataset, default_collate
 import torchvision.transforms as transforms
 
-from fingertip.utils import device, crop_image, resize_image, pad_to_square_image, transform_coordinate_without_padding
+from fingertip.utils import crop_image, resize_image, pad_to_square_image, transform_coordinate_without_padding
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -15,8 +15,8 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 class Hagrid3IndexFingertipDataset(Dataset):
     '''Hagrid 3-class fingertip dataset.
     '''
-    ANNOTATIONS_DIR = 'D:/Datasets/HaGRID/hagrid-3/annos'
-    IMAGES_DIR = 'D:/Datasets/HaGRID/hagrid-3/images'
+    ANNOTATIONS_DIR = 'D:/Datasets/HaGRID/hagrid-13/annos'
+    IMAGES_DIR = 'D:/Datasets/HaGRID/hagrid-13/images'
     IMAGE_SIZE = 128
 
     def __init__(self, dataset='train', learning=True):
@@ -76,7 +76,7 @@ class Hagrid3IndexFingertipDataset(Dataset):
 
         coords = torch.tensor([tip_x, tip_y], dtype=torch.float32)
 
-        return img.to(device), coords.to(device), img_name
+        return img, coords, img_name
 
     @classmethod
     def collate_fn(cls, batch):

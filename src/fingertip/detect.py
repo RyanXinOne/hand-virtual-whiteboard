@@ -70,6 +70,7 @@ if __name__ == "__main__":
         if sample is None:
             continue
         X, y, img_name = sample
+        X, y = X.to(device), y.to(device)
         pred = detect_image(model, X)
         X, y = np.array(transforms.ToPILImage()(X)), y.tolist()
         draw_and_save_output_image(X, pred, os.path.join(OUTPUT_DIR, f"{img_name}.jpg"), label=y)
