@@ -9,7 +9,7 @@ from fingertip.model import load_model
 from fingertip.utils import device
 
 
-EPOCHS = 40
+EPOCHS = 150
 BATCH_SIZE = 64
 LEARNING_RATE = 0.001
 PRETRAINED_WEIGHTS = "weights/fingertip/hagrid-3-fingertip.pth"
@@ -41,7 +41,7 @@ def train_loop():
         loss.backward()
         optimizer.step()
 
-        pbar.set_postfix(loss=loss.item())
+        pbar.set_postfix(loss=f'{loss.item():.6f}')
 
 
 def test_loop():

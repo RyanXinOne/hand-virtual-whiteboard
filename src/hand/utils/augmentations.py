@@ -20,7 +20,7 @@ class StrongAug(ImgAug):
         self.augmentations = iaa.Sequential([
             iaa.Dropout([0.0, 0.01]),
             iaa.Sharpen((0.0, 0.1)),
-            iaa.Affine(rotate=(-10, 10), translate_percent=(-0.1, 0.1), scale=(0.8, 1.5)),
+            iaa.Affine(rotate=(-20, 20), translate_percent=(-0.1, 0.1), scale=(0.8, 1.5)),
             iaa.AddToBrightness((-60, 40)),
             iaa.AddToHue((-20, 20)),
             iaa.Fliplr(0.5),

@@ -120,7 +120,7 @@ def transform_coordinate_with_padding(in_x, in_y, img_width, img_height, abs_pad
 augmentation = iaa.Sequential([
     iaa.Dropout([0.0, 0.01]),
     iaa.Sharpen((0.0, 0.1)),
-    iaa.Affine(rotate=(-30, 30), translate_percent=(-0.1, 0.1), scale=(0.8, 1.2)),
+    iaa.Affine(rotate=(-20, 20), translate_percent=(-0.05, 0.05), scale=(0.8, 1.1)),
     iaa.AddToBrightness((-60, 40)),
     iaa.AddToHue((-20, 20)),
     iaa.Fliplr(0.5),
