@@ -17,13 +17,13 @@ from hand.test import _evaluate, _create_validation_data_loader
 
 
 MODEL_DEF = "config/yolov3-hagrid-13.cfg"
-PRETRAINED_WEIGHTS = "weights/hand/hagrid-3.conv.74"
-PRETRAINED_EPOCHS = 0
+PRETRAINED_WEIGHTS = "checkpoints/hand/yolov3_ckpt_42_map0.95279.pth"
+PRETRAINED_EPOCHS = 42
 EPOCHS = 200
 DATA_CONFIG = "config/hagrid-13.data"
 DATA_AUGMENTATION = "strong"
 MULTISCALE_TRAINING = False
-N_CPU = 8
+N_CPU = 4
 IOU_THRES = 0.5
 CONF_THRES = 0.1
 NMS_THRES = 0.4

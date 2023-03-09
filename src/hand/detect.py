@@ -25,7 +25,7 @@ DATA_CONFIG = "config/hagrid-3.data"
 IMAGES_INPUT = "D:/Datasets/HaGRID/hagrid-3/images/subsample"
 IMAGES_OUTPUT = "output/hand"
 IMG_SIZE = 416
-N_CPU = 8
+N_CPU = 4
 CONF_THRES = 0.1
 NMS_THRES = 0.4
 

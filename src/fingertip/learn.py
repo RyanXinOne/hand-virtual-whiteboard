@@ -9,11 +9,11 @@ from fingertip.model import load_model
 from fingertip.utils import device
 
 
-EPOCHS = 150
+EPOCHS = 200
 BATCH_SIZE = 64
-LEARNING_RATE = 0.001
-PRETRAINED_WEIGHTS = "weights/fingertip/hagrid-3-fingertip.pth"
-PRETRAINED_EPOCHS = 0
+LEARNING_RATE = 0.001 / 10
+PRETRAINED_WEIGHTS = "checkpoints/fingertip/fingertip_model_ckpt138_loss0.001208.pth"
+PRETRAINED_EPOCHS = 138
 CHECKPOINT_DIR = "checkpoints/fingertip"
 N_CPU = 4
 
