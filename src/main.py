@@ -11,7 +11,22 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        def gestureSlot(ges_class):
+            if ges_class == 'one':
+                # activate pen
+                if not self.penAct.isChecked():
+                    self.penAct.setChecked(True)
+            elif ges_class == 'two_up':
+                # activate eraser
+                if not self.eraserAct.isChecked():
+                    self.eraserAct.setChecked(True)
+            elif ges_class == 'stop':
+                # activate page move
+                if not self.pageMoveAct.isChecked():
+                    self.pageMoveAct.setChecked(True)
+
         self.canvas = HandCanvas(self)
+        self.canvas.onGesture.connect(gestureSlot)
 
         self._setupAuxToolbar()
         self._setupMainToolbar()
@@ -155,18 +170,6 @@ class MainWindow(QMainWindow):
         self.auxToolbarIds['empty'] = self.auxToolbar.addToolbar(emptyToolbar)
 
         self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, self.auxToolbar)
-
-    def activatePen(self):
-        if not self.penAct.isChecked():
-            self.penAct.setChecked(True)
-
-    def activateEraser(self):
-        if not self.eraserAct.isChecked():
-            self.eraserAct.setChecked(True)
-
-    def activatePageMove(self):
-        if not self.pageMoveAct.isChecked():
-            self.pageMoveAct.setChecked(True)
 
 
 if __name__ == '__main__':
