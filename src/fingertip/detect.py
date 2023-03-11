@@ -11,7 +11,7 @@ from fingertip.dataset import Hagrid3IndexFingertipDataset
 from fingertip.utils import device, resize_image, pad_to_square_image, transform_coordinate_with_padding
 
 
-PRETRAINED_WEIGHTS = "weights/fingertip/hagrid-3-fingertip.pth"
+PRETRAINED_WEIGHTS = "weights/fingertip/hagrid-13-fingertip.pth"
 OUTPUT_DIR = "output/fingertip"
 
 

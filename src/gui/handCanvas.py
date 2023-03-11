@@ -82,17 +82,22 @@ class HandCanvas(Canvas):
         detection = self.engine.detect(image)
         if detection is None:
             return
-        x, y, bx1, by1, bx2, by2, conf, cls_ = detection
-        # coordinate transform from camera to canvas
-        rect = self.getCameraRect()
-        point_x = (x - rect.x()) * self.width() / rect.width()
-        point_y = (y - rect.y()) * self.height() / rect.height()
-        point = QPoint(round(point_x), round(point_y))
-        is_new_class = self.point_buffer.add(self.engine.classIndexToName(cls_), point)
+        x, y, bx1, by1, bx2, by2, conf, cls_n = detection
 
-        ges_class = self.point_buffer.getClass()
-        if is_new_class:
-            self.onGesture.emit(ges_class)
+        if x > -1:
+            # fingertip coordinate transform from camera to canvas
+            rect = self.getCameraRect()
+            point_x = (x - rect.x()) * self.width() / rect.width()
+            point_y = (y - rect.y()) * self.height() / rect.height()
+            point = QPoint(round(point_x), round(point_y))
+
+            is_new_class = self.point_buffer.add(cls_n, point)
+            ges_class = self.point_buffer.getClass()
+            if is_new_class:
+                self.onGesture.emit(ges_class)
+        else:
+            self.point_buffer.clear()
+            ges_class = cls_n
 
         if ges_class in ('one', 'two_up'):
             # pen stroke

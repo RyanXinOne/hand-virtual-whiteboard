@@ -20,10 +20,11 @@ IMAGES_OUTPUT = "output/pipeline"
 class DetectEngine:
     HAND_DATA_CONFIG = "config/hagrid-3.data"
     HAND_MODEL_DEF = "config/yolov3-hagrid-3.cfg"
+    HAND_WEIGHTS = "weights/hand/hagrid-3.pth"
     CONF_THRES = 0.1
     NMS_THRES = 0.4
-    HAND_WEIGHTS = "weights/hand/hagrid-3.pth"
-    FINGERTIP_WEIGHTS = "weights/fingertip/hagrid-3-fingertip.pth"
+    FINGERTIP_WEIGHTS = "weights/fingertip/hagrid-13-fingertip.pth"
+    FINGERTIP_CLASSES = ("like", "one", "stop", "two_up")
 
     def __init__(self):
         # load models
@@ -34,7 +35,9 @@ class DetectEngine:
         self.class_names = load_classes(data_config["names"])
 
     def detect(self, image):
-        '''Return fingertip position and hand bounding box, confidence and class. All coordinates are absolute values in floating numbers.
+        '''Return fingertip coordinate, hand bounding box, confidence, and class name. All coordinates are absolute values in floating numbers.
+
+        If no hand is detected, return None. If no fingertip is detected, fingertip coordinate is set to -1.
         '''
         # hand detection
         detection = detect_hand(self.hand_model, image, conf_thres=self.CONF_THRES, nms_thres=self.NMS_THRES)
@@ -48,14 +51,18 @@ class DetectEngine:
         if b_x1 >= b_x2 or b_y1 >= b_y2:
             return None
 
-        # crop hand
-        hand_image = image[b_y1:b_y2, b_x1:b_x2]
+        cls_name = self.classIndexToName(cls_pred)
+        if cls_name in self.FINGERTIP_CLASSES:
+            # crop hand
+            hand_image = image[b_y1:b_y2, b_x1:b_x2]
 
-        # fingertip detection
-        tip_x, tip_y = detect_fingertip(self.fingertip_model, hand_image)
-        abs_tip_x, abs_tip_y = tip_x * hand_image.shape[1] + b_x1, tip_y * hand_image.shape[0] + b_y1
+            # fingertip detection
+            tip_x, tip_y = detect_fingertip(self.fingertip_model, hand_image)
+            abs_tip_x, abs_tip_y = tip_x * hand_image.shape[1] + b_x1, tip_y * hand_image.shape[0] + b_y1
+        else:
+            abs_tip_x = abs_tip_y = -1
 
-        return abs_tip_x, abs_tip_y, abs_x1, abs_y1, abs_x2, abs_y2, conf, cls_pred
+        return abs_tip_x, abs_tip_y, abs_x1, abs_y1, abs_x2, abs_y2, conf, cls_name
 
     def classIndexToName(self, class_index):
         return self.class_names[int(class_index)]
@@ -77,10 +84,11 @@ if __name__ == "__main__":
 
         detection = backend_engine.detect(image)
         if detection is not None:
-            x, y, bx1, by1, bx2, by2, conf, cls_ = detection
+            x, y, bx1, by1, bx2, by2, conf, cls_n = detection
             x, y, bx1, by1, bx2, by2 = round(x), round(y), round(bx1), round(by1), round(bx2), round(by2)
-            # draw fingertip
-            image = cv2.circle(image, (x, y), 1, (0, 0, 255), -1)
+            if x > -1:
+                # draw fingertip
+                image = cv2.circle(image, (x, y), 1, (0, 0, 255), -1)
             # draw bounding box
             image = cv2.rectangle(image, (bx1, by1), (bx2, by2), (0, 255, 0), 1)
 
