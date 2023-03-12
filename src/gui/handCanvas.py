@@ -82,7 +82,14 @@ class HandCanvas(Canvas):
         detection = self.engine.detect(image)
         if detection is None:
             return
+
+        if self.show_camera:
+            image = self.engine.drawDetection(image, detection)
+            self.setCameraArray(image)
+
         x, y, bx1, by1, bx2, by2, conf, cls_n = detection
+        if cls_n not in ('one', 'two_up', 'stop'):
+            return
 
         if x > -1:
             # fingertip coordinate transform from camera to canvas
@@ -92,10 +99,13 @@ class HandCanvas(Canvas):
             point = QPoint(round(point_x), round(point_y))
 
             is_new_class = self.point_buffer.add(cls_n, point)
+            self.timer.start(self.END_STROKE_IN_SEC * 1000)
+
             ges_class = self.point_buffer.getClass()
             if is_new_class:
                 self.onGesture.emit(ges_class)
         else:
+            self.timer.stop()
             self.point_buffer.clear()
             ges_class = cls_n
 

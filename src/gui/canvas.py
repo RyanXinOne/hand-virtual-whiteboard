@@ -1,7 +1,8 @@
+import time
 import numpy as np
 import cv2
 from PyQt6.QtWidgets import QWidget
-from PyQt6.QtGui import QPixmap, QImage, QPen, QColorConstants, QPainter, QPainterPath
+from PyQt6.QtGui import QPixmap, QImage, QPen, QFont, QColorConstants, QPainter, QPainterPath
 from PyQt6.QtCore import Qt, QSize, QPoint, QPointF, QRect
 
 
@@ -35,6 +36,10 @@ class Canvas(QWidget):
         self.camera = cv2.VideoCapture(0)
         self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.PREFERRED_SIZE.width())
         self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.PREFERRED_SIZE.height())
+
+        self.fps = 0
+        self.last_frame_time = time.perf_counter()
+
         self.toggleCamera(False)
 
         self.startTimer(0)
@@ -120,11 +125,6 @@ class Canvas(QWidget):
         self.painter.drawPath(path)
         self.painter.end()
 
-    def getCameraArray(self):
-        '''Return camera image as np.ndarray in RGB format.
-        '''
-        return cv2.cvtColor(self.camera_array, cv2.COLOR_BGR2RGB)
-
     def getCameraRect(self):
         '''Return absolute rect indicating valid camera array area that can be visible on canvas. Regardless of camera image.
         '''
@@ -145,6 +145,33 @@ class Canvas(QWidget):
             x = 0
             y = (camera_h - h) // 2
             return QRect(x, y, w, h)
+
+    def getCameraArray(self):
+        '''Return camera image as np.ndarray in RGB format.
+        '''
+        return cv2.cvtColor(self.camera_array, cv2.COLOR_BGR2RGB)
+
+    def setCameraArray(self, array, fromRGB=True):
+        '''Set camera_array and camera_image in BGR format.
+        '''
+        if fromRGB:
+            array = cv2.cvtColor(array, cv2.COLOR_RGB2BGR)
+        self.camera_array = array
+
+        # prepare camera QImage
+        if self.show_camera:
+            self.camera_image = QImage(self.camera_array.data, self.camera_array.shape[1], self.camera_array.shape[0], QImage.Format.Format_BGR888)
+            # draw fps on camera image
+            self.painter.begin(self.camera_image)
+            self.painter.setPen(QPen(QColorConstants.Black))
+            self.painter.setFont(QFont('Arial', 11))
+            self.painter.drawText(10, 20, f'fps: {self.fps:.1f}')
+            self.painter.end()
+        else:
+            self.camera_image = QImage()
+
+        if not self.camera_image.isNull():
+            self.update()
 
     def mousePressEvent(self, e):
         self.mouse_points = [e.pos()]
@@ -173,9 +200,9 @@ class Canvas(QWidget):
         self._updateAbsOffset()
 
     def timerEvent(self, e):
+        self.fps = 1 / (time.perf_counter() - self.last_frame_time)
+        self.last_frame_time = time.perf_counter()
         self._updateCamera()
-        if not self.camera_image.isNull():
-            self.update()
 
     def paintEvent(self, e):
         target_rect = e.rect()
@@ -204,16 +231,12 @@ class Canvas(QWidget):
         '''
         # prepare camera ndarray
         if self.camera.isOpened():
-            _, self.camera_array = self.camera.read()
-            self.camera_array = cv2.flip(self.camera_array, 1)
+            _, array = self.camera.read()
+            array = cv2.flip(array, 1)
         else:
-            self.camera_array = np.empty((0, 0, 3), dtype=np.uint8)
+            array = np.empty((0, 0, 3), dtype=np.uint8)
 
-        # prepare camera QImage
-        if self.show_camera:
-            self.camera_image = QImage(self.camera_array.data, self.camera_array.shape[1], self.camera_array.shape[0], QImage.Format.Format_BGR888)
-        else:
-            self.camera_image = QImage()
+        self.setCameraArray(array, fromRGB=False)
 
 
 if __name__ == "__main__":

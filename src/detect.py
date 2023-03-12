@@ -67,9 +67,23 @@ class DetectEngine:
     def classIndexToName(self, class_index):
         return self.class_names[int(class_index)]
 
+    def drawDetection(self, image, detection):
+        '''Draw detection on image in RGB format.
+        '''
+        x, y, bx1, by1, bx2, by2, conf, cls_n = detection
+        x, y, bx1, by1, bx2, by2 = round(x), round(y), round(bx1), round(by1), round(bx2), round(by2)
+        if x > -1:
+            # draw fingertip
+            image = cv2.circle(image, (x, y), 2, (255, 0, 0), -1)
+        # draw bounding box
+        image = cv2.rectangle(image, (bx1, by1), (bx2, by2), (0, 0, 255), 1)
+        # draw class name
+        image = cv2.putText(image, f"{cls_n} {conf:.2f}", (bx1, by1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+        return image
+
 
 if __name__ == "__main__":
-    backend_engine = DetectEngine()
+    engine = DetectEngine()
     # load images
     image_files = os.listdir(IMAGES_INPUT)
     os.makedirs(IMAGES_OUTPUT, exist_ok=True)
@@ -82,15 +96,9 @@ if __name__ == "__main__":
             print(f"Could not read image '{img_path}'.")
             continue
 
-        detection = backend_engine.detect(image)
+        detection = engine.detect(image)
         if detection is not None:
-            x, y, bx1, by1, bx2, by2, conf, cls_n = detection
-            x, y, bx1, by1, bx2, by2 = round(x), round(y), round(bx1), round(by1), round(bx2), round(by2)
-            if x > -1:
-                # draw fingertip
-                image = cv2.circle(image, (x, y), 1, (0, 0, 255), -1)
-            # draw bounding box
-            image = cv2.rectangle(image, (bx1, by1), (bx2, by2), (0, 255, 0), 1)
+            image = engine.drawDetection(image, detection)
 
         # show image
         image = Image.fromarray(image)
