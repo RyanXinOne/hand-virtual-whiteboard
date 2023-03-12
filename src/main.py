@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QMainWindow, QToolBar
+from PyQt6.QtWidgets import QMainWindow, QToolBar, QLabel
 from PyQt6.QtGui import QAction, QActionGroup, QColor, QIcon
 from PyQt6.QtCore import Qt
 
@@ -10,6 +10,12 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.setWindowTitle('Hand Virtual Whiteboard')
+        loadingLabel = QLabel('Loading...', self)
+        loadingLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setCentralWidget(loadingLabel)
+        self.resize(800, 600)
+        self.show()
 
         def gestureSlot(ges_class):
             if ges_class == 'one':
@@ -32,9 +38,6 @@ class MainWindow(QMainWindow):
         self._setupMainToolbar()
 
         self.setCentralWidget(self.canvas)
-
-        self.setWindowTitle('Hand Virtual Whiteboard')
-        self.show()
 
     def _setupMainToolbar(self):
         '''Main toolbar lies on top.
