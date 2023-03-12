@@ -161,12 +161,6 @@ class Canvas(QWidget):
         # prepare camera QImage
         if self.show_camera:
             self.camera_image = QImage(self.camera_array.data, self.camera_array.shape[1], self.camera_array.shape[0], QImage.Format.Format_BGR888)
-            # draw fps on camera image
-            self.painter.begin(self.camera_image)
-            self.painter.setPen(QPen(QColorConstants.Black))
-            self.painter.setFont(QFont('Arial', 11))
-            self.painter.drawText(10, 20, f'fps: {self.fps:.1f}')
-            self.painter.end()
         else:
             self.camera_image = QImage()
 
@@ -213,6 +207,11 @@ class Canvas(QWidget):
         self.painter.drawPixmap(target_rect, self.background_board, board_rect)
         # draw camera image
         self.painter.drawImage(target_rect, self.camera_image, camera_rect)
+        # draw fps
+        if self.show_camera:
+            self.painter.setPen(QPen(QColorConstants.Black))
+            self.painter.setFont(QFont('Arial', 11))
+            self.painter.drawText(10, 20, f'fps: {self.fps:.1f}')
         # draw strokes
         self.painter.drawPixmap(target_rect, self.strokes_board, board_rect)
         self.painter.end()
