@@ -8,14 +8,15 @@ import torchvision.transforms as transforms
 
 from fingertip.model import load_model
 from fingertip.dataset import Hagrid3IndexFingertipDataset
-from fingertip.utils import device, resize_image, pad_to_square_image, transform_coordinate_with_padding
+from fingertip.utils import resize_image, pad_to_square_image, transform_coordinate_with_padding
 
 
 PRETRAINED_WEIGHTS = "weights/fingertip/hagrid-13-fingertip.pth"
 OUTPUT_DIR = "output/fingertip"
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def detect_image(model, image, image_size=128):
+def detect_image(model, image, image_size=128, device='cuda'):
     '''Detect index fingertip in a single image.
 
     Args:
@@ -63,14 +64,14 @@ def draw_and_save_output_image(image, detection, output_path, label=None):
 
 if __name__ == "__main__":
     sample_dataset = Hagrid3IndexFingertipDataset(dataset='subsample', learning=False)
-    model = load_model(weights_path=PRETRAINED_WEIGHTS)
+    model = load_model(weights_path=PRETRAINED_WEIGHTS, device=DEVICE)
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     for i, sample in tqdm(enumerate(sample_dataset)):
         if sample is None:
             continue
         X, y, img_name = sample
-        X, y = X.to(device), y.to(device)
-        pred = detect_image(model, X)
+        X, y = X.to(DEVICE), y.to(DEVICE)
+        pred = detect_image(model, X, device=DEVICE)
         X, y = np.array(transforms.ToPILImage()(X)), y.tolist()
         draw_and_save_output_image(X, pred, os.path.join(OUTPUT_DIR, f"{img_name}.jpg"), label=y)

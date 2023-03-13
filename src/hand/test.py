@@ -22,9 +22,10 @@ IOU_THRES = 0.5
 CONF_THRES = 0.1
 NMS_THRES = 0.4
 VERBOSE = True
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def evaluate_model_file(model_path, weights_path, img_path, class_names, batch_size=8, img_size=416, n_cpu=8, iou_thres=0.5, conf_thres=0.5, nms_thres=0.5, verbose=True):
+def evaluate_model_file(model_path, weights_path, img_path, class_names, batch_size=8, img_size=416, n_cpu=8, iou_thres=0.5, conf_thres=0.5, nms_thres=0.5, verbose=True, device="cuda"):
     """Evaluate model on validation dataset.
 
     :param model_path: Path to model definition file (.cfg)
@@ -52,8 +53,8 @@ def evaluate_model_file(model_path, weights_path, img_path, class_names, batch_s
     :return: Returns precision, recall, AP, f1, ap_class
     """
     dataloader = _create_validation_data_loader(img_path, batch_size, img_size, n_cpu)
-    model = load_model(model_path, weights_path)
-    metrics_output = _evaluate(model, dataloader, class_names, img_size, iou_thres, conf_thres, nms_thres, verbose)
+    model = load_model(model_path, weights_path, device)
+    metrics_output = _evaluate(model, dataloader, class_names, img_size, iou_thres, conf_thres, nms_thres, verbose, device)
     return metrics_output
 
 
@@ -71,7 +72,7 @@ def print_eval_stats(metrics_output, class_names, verbose):
         print("---- mAP not measured (no detections found by model) ----")
 
 
-def _evaluate(model, dataloader, class_names, img_size, iou_thres, conf_thres, nms_thres, verbose):
+def _evaluate(model, dataloader, class_names, img_size, iou_thres, conf_thres, nms_thres, verbose, device):
     """Evaluate model on validation dataset.
 
     :param model: Model to evaluate
@@ -94,8 +95,6 @@ def _evaluate(model, dataloader, class_names, img_size, iou_thres, conf_thres, n
     """
     model.eval()  # Set model to evaluation mode
 
-    Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-
     labels = []
     sample_metrics = []  # List of tuples (TP, confs, pred)
     for _, imgs, targets in tqdm.tqdm(dataloader, desc="Validating"):
@@ -105,7 +104,7 @@ def _evaluate(model, dataloader, class_names, img_size, iou_thres, conf_thres, n
         targets[:, 2:] = xywh2xyxy(targets[:, 2:])
         targets[:, 2:] *= img_size
 
-        imgs = Variable(imgs.type(Tensor), requires_grad=False)
+        imgs = Variable(imgs.to(device), requires_grad=False)
 
         with torch.no_grad():
             outputs = model(imgs)
@@ -170,4 +169,5 @@ if __name__ == "__main__":
         iou_thres=IOU_THRES,
         conf_thres=CONF_THRES,
         nms_thres=NMS_THRES,
-        verbose=VERBOSE)
+        verbose=VERBOSE,
+        device=DEVICE)

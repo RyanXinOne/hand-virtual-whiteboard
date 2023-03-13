@@ -1,11 +1,7 @@
 import imgaug.augmenters as iaa
 import numpy as np
-import torch
 import torch.nn.functional as F
 import torchvision.transforms as transforms
-
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def pad_to_square_image(image, pad_value=0):

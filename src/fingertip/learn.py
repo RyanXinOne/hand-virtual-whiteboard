@@ -6,16 +6,16 @@ from torch.utils.data import DataLoader
 
 from fingertip.dataset import Hagrid3IndexFingertipDataset
 from fingertip.model import load_model
-from fingertip.utils import device
 
 
 EPOCHS = 200
 BATCH_SIZE = 64
-LEARNING_RATE = 0.001 / 10
-PRETRAINED_WEIGHTS = "checkpoints/fingertip/fingertip_model_ckpt138_loss0.001208.pth"
-PRETRAINED_EPOCHS = 138
+LEARNING_RATE = 0.001
+PRETRAINED_WEIGHTS = ""
+PRETRAINED_EPOCHS = 0
 CHECKPOINT_DIR = "checkpoints/fingertip"
 N_CPU = 4
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
@@ -23,7 +23,7 @@ os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 train_dataloader = DataLoader(Hagrid3IndexFingertipDataset(dataset='train'), batch_size=BATCH_SIZE, shuffle=True, num_workers=N_CPU, collate_fn=Hagrid3IndexFingertipDataset.collate_fn)
 test_dataloader = DataLoader(Hagrid3IndexFingertipDataset(dataset='test'), batch_size=BATCH_SIZE, shuffle=True, num_workers=N_CPU, collate_fn=Hagrid3IndexFingertipDataset.collate_fn)
 
-model = load_model(weights_path=PRETRAINED_WEIGHTS)
+model = load_model(weights_path=PRETRAINED_WEIGHTS, device=DEVICE)
 loss_fn = nn.MSELoss()
 def optim(): return torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
 
@@ -32,7 +32,7 @@ def train_loop():
     model.train()
     pbar = tqdm(train_dataloader, desc="Training")
     for X, y in pbar:
-        X, y = X.to(device), y.to(device)
+        X, y = X.to(DEVICE), y.to(DEVICE)
 
         pred = model(X)
         loss = loss_fn(pred, y)
@@ -50,7 +50,7 @@ def test_loop():
     test_loss = 0
     with torch.no_grad():
         for X, y in tqdm(test_dataloader, desc="Testing"):
-            X, y = X.to(device), y.to(device)
+            X, y = X.to(DEVICE), y.to(DEVICE)
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
     test_loss /= num_batches

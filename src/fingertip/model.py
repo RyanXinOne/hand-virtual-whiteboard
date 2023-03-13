@@ -2,8 +2,6 @@ import torch
 import torch.nn as nn
 from torchvision.models import vgg16
 
-from fingertip.utils import device
-
 
 class FingertipDetector(nn.Module):
     '''Index fingertip detector model.
@@ -29,7 +27,7 @@ class FingertipDetector(nn.Module):
         return x
 
 
-def load_model(weights_path=None):
+def load_model(weights_path=None, device='cuda'):
     '''Load model weights from file or initialize weights if no path is given.
 
     Args:

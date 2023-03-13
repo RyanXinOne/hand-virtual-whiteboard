@@ -17,8 +17,8 @@ from hand.test import _evaluate, _create_validation_data_loader
 
 
 MODEL_DEF = "config/yolov3-hagrid-13.cfg"
-PRETRAINED_WEIGHTS = "checkpoints/hand/yolov3_ckpt_42_map0.95279.pth"
-PRETRAINED_EPOCHS = 42
+PRETRAINED_WEIGHTS = ""
+PRETRAINED_EPOCHS = 0
 EPOCHS = 200
 DATA_CONFIG = "config/hagrid-13.data"
 DATA_AUGMENTATION = "strong"
@@ -33,6 +33,7 @@ LOG_DIR = "logs/"
 CHECKPOINT_DIR = "checkpoints/hand"
 SEED = -1
 VERBOSE = False
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def _create_data_loader(img_path, batch_size, img_size, n_cpu, augmentation='default', multiscale_training=False):
@@ -81,13 +82,12 @@ if __name__ == "__main__":
     train_path = data_config["train"]
     valid_path = data_config["valid"]
     class_names = load_classes(data_config["names"])
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # ############
     # Create model
     # ############
 
-    model = load_model(MODEL_DEF, PRETRAINED_WEIGHTS)
+    model = load_model(MODEL_DEF, PRETRAINED_WEIGHTS, DEVICE)
 
     # Print model
     if VERBOSE:
@@ -147,8 +147,8 @@ if __name__ == "__main__":
         for batch_i, (_, imgs, targets) in enumerate(tqdm.tqdm(dataloader, desc=f"Training Epoch {epoch}")):
             batches_done = len(dataloader) * epoch + batch_i
 
-            imgs = imgs.to(device, non_blocking=True)
-            targets = targets.to(device)
+            imgs = imgs.to(DEVICE, non_blocking=True)
+            targets = targets.to(DEVICE)
 
             outputs = model(imgs)
 
@@ -221,7 +221,8 @@ if __name__ == "__main__":
                 iou_thres=IOU_THRES,
                 conf_thres=CONF_THRES,
                 nms_thres=NMS_THRES,
-                verbose=VERBOSE
+                verbose=VERBOSE,
+                device=DEVICE
             )
 
             if metrics_output is not None:

@@ -28,9 +28,10 @@ IMG_SIZE = 416
 N_CPU = 4
 CONF_THRES = 0.1
 NMS_THRES = 0.4
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def detect_directory(model_path, weights_path, img_path, classes, output_path, batch_size=8, img_size=416, n_cpu=8, conf_thres=0.5, nms_thres=0.5):
+def detect_directory(model_path, weights_path, img_path, classes, output_path, batch_size=8, img_size=416, n_cpu=8, conf_thres=0.5, nms_thres=0.5, device="cuda"):
     """Detects objects on all images in specified directory and saves output images with drawn detections.
 
     :param model_path: Path to model definition file (.cfg)
@@ -55,14 +56,14 @@ def detect_directory(model_path, weights_path, img_path, classes, output_path, b
     :type nms_thres: float, optional
     """
     dataloader = _create_data_loader(img_path, batch_size, img_size, n_cpu)
-    model = load_model(model_path, weights_path)
-    img_detections, imgs = detect(model, dataloader, output_path, conf_thres, nms_thres)
+    model = load_model(model_path, weights_path, device)
+    img_detections, imgs = detect(model, dataloader, output_path, conf_thres, nms_thres, device)
     _draw_and_save_output_images(img_detections, imgs, img_size, output_path, classes)
 
     print(f"---- Detections were saved to: '{output_path}' ----")
 
 
-def detect_image(model, image, img_size=416, conf_thres=0.5, nms_thres=0.5):
+def detect_image(model, image, img_size=416, conf_thres=0.5, nms_thres=0.5, device="cuda"):
     """Inferences one image with model.
 
     :param model: Model for inference
@@ -86,8 +87,7 @@ def detect_image(model, image, img_size=416, conf_thres=0.5, nms_thres=0.5):
         Resize(img_size)]
     )((image, np.zeros((1, 5))))[0].unsqueeze(0)
 
-    if torch.cuda.is_available():
-        input_img = input_img.to("cuda")
+    input_img = input_img.to(device)
 
     # Get detections
     with torch.no_grad():
@@ -97,7 +97,7 @@ def detect_image(model, image, img_size=416, conf_thres=0.5, nms_thres=0.5):
     return detections.numpy()
 
 
-def detect(model, dataloader, output_path, conf_thres, nms_thres):
+def detect(model, dataloader, output_path, conf_thres, nms_thres, device):
     """Inferences images with model.
 
     :param model: Model for inference
@@ -120,14 +120,12 @@ def detect(model, dataloader, output_path, conf_thres, nms_thres):
 
     model.eval()  # Set model to evaluation mode
 
-    Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-
     img_detections = []  # Stores detections for each image index
     imgs = []  # Stores image paths
 
     for (img_paths, input_imgs) in tqdm.tqdm(dataloader, desc="Detecting"):
         # Configure input
-        input_imgs = Variable(input_imgs.type(Tensor))
+        input_imgs = Variable(input_imgs.to(device))
 
         # Get detections
         with torch.no_grad():
@@ -261,4 +259,5 @@ if __name__ == '__main__':
         img_size=IMG_SIZE,
         n_cpu=N_CPU,
         conf_thres=CONF_THRES,
-        nms_thres=NMS_THRES)
+        nms_thres=NMS_THRES,
+        device=DEVICE)

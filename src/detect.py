@@ -3,6 +3,8 @@ from tqdm import tqdm
 from PIL import Image, ImageFile
 import cv2
 import numpy as np
+import torch
+
 from hand.models import load_model as load_hand_model
 from hand.detect import detect_image as detect_hand
 from hand.utils.parse_config import parse_data_config
@@ -25,11 +27,12 @@ class DetectEngine:
     NMS_THRES = 0.4
     FINGERTIP_WEIGHTS = "weights/fingertip/hagrid-13-fingertip.pth"
     FINGERTIP_CLASSES = ("like", "one", "stop", "two_up")
+    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def __init__(self):
         # load models
-        self.hand_model = load_hand_model(self.HAND_MODEL_DEF, self.HAND_WEIGHTS)
-        self.fingertip_model = load_fingertip_model(self.FINGERTIP_WEIGHTS)
+        self.hand_model = load_hand_model(self.HAND_MODEL_DEF, self.HAND_WEIGHTS, device=self.DEVICE)
+        self.fingertip_model = load_fingertip_model(self.FINGERTIP_WEIGHTS, device=self.DEVICE)
 
         data_config = parse_data_config(self.HAND_DATA_CONFIG)
         self.class_names = load_classes(data_config["names"])
@@ -40,7 +43,7 @@ class DetectEngine:
         If no hand is detected, return None. If no fingertip is detected, fingertip coordinate is set to -1.
         '''
         # hand detection
-        detection = detect_hand(self.hand_model, image, conf_thres=self.CONF_THRES, nms_thres=self.NMS_THRES)
+        detection = detect_hand(self.hand_model, image, conf_thres=self.CONF_THRES, nms_thres=self.NMS_THRES, device=self.DEVICE)
         if detection.shape[0] == 0:
             # no hand detected
             return None
@@ -57,7 +60,7 @@ class DetectEngine:
             hand_image = image[b_y1:b_y2, b_x1:b_x2]
 
             # fingertip detection
-            tip_x, tip_y = detect_fingertip(self.fingertip_model, hand_image)
+            tip_x, tip_y = detect_fingertip(self.fingertip_model, hand_image, device=self.DEVICE)
             abs_tip_x, abs_tip_y = tip_x * hand_image.shape[1] + b_x1, tip_y * hand_image.shape[0] + b_y1
         else:
             abs_tip_x = abs_tip_y = -1
