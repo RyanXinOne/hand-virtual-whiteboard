@@ -207,13 +207,13 @@ class Canvas(QWidget):
         self.painter.drawPixmap(target_rect, self.background_board, board_rect)
         # draw camera image
         self.painter.drawImage(target_rect, self.camera_image, camera_rect)
+        # draw strokes
+        self.painter.drawPixmap(target_rect, self.strokes_board, board_rect)
         # draw fps
         if self.show_camera:
             self.painter.setPen(QPen(QColorConstants.Black))
             self.painter.setFont(QFont('Arial', 11))
             self.painter.drawText(10, 20, f'fps: {self.fps:.1f}')
-        # draw strokes
-        self.painter.drawPixmap(target_rect, self.strokes_board, board_rect)
         self.painter.end()
 
     def sizeHint(self):

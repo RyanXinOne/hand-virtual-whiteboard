@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QMainWindow, QToolBar, QLabel
-from PyQt6.QtGui import QAction, QActionGroup, QColor, QIcon
-from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QAction, QActionGroup, QColor, QIcon, QFont
+from PyQt6.QtCore import Qt, QSize
 
 from gui.handCanvas import HandCanvas
 from gui.stackedToolbar import StackedToolbar
@@ -12,9 +12,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle('Hand Virtual Whiteboard')
         loadingLabel = QLabel('Loading...', self)
+        loadingLabel.setFont(QFont('Arial', 13))
         loadingLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setCentralWidget(loadingLabel)
-        self.resize(800, 600)
         self.show()
 
         def gestureSlot(ges_class):
@@ -173,6 +173,9 @@ class MainWindow(QMainWindow):
         self.auxToolbarIds['empty'] = self.auxToolbar.addToolbar(emptyToolbar)
 
         self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, self.auxToolbar)
+
+    def sizeHint(self):
+        return QSize(800, 600)
 
 
 if __name__ == '__main__':

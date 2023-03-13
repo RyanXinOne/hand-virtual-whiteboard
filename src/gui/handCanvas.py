@@ -65,14 +65,19 @@ class HandCanvas(Canvas):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.point_buffer = HandPointBuffer()
+        self.ges_class = ''
 
         self.engine = DetectEngine()
         # dry run to make engine prepared
         self.engine.detect(np.empty((1, 1, 3), dtype=np.uint8))
 
+        def timerTimeoutSlot():
+            self.ges_class = ''
+            self.point_buffer.clear()
+
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
-        self.timer.timeout.connect(self.point_buffer.clear)
+        self.timer.timeout.connect(timerTimeoutSlot)
 
     def timerEvent(self, e):
         super().timerEvent(e)
@@ -96,31 +101,35 @@ class HandCanvas(Canvas):
             rect = self.getCameraRect()
             point_x = (x - rect.x()) * self.width() / rect.width()
             point_y = (y - rect.y()) * self.height() / rect.height()
-            point = QPoint(round(point_x), round(point_y))
+            self.ges_point = QPoint(round(point_x), round(point_y))
 
-            is_new_class = self.point_buffer.add(cls_n, point)
+            is_new_class = self.point_buffer.add(cls_n, self.ges_point)
             self.timer.start(self.END_STROKE_IN_SEC * 1000)
 
-            ges_class = self.point_buffer.getClass()
+            self.ges_class = self.point_buffer.getClass()
             if is_new_class:
-                self.onGesture.emit(ges_class)
+                self.onGesture.emit(self.ges_class)
         else:
             self.timer.stop()
+            self.ges_class = cls_n
             self.point_buffer.clear()
-            ges_class = cls_n
 
-        if ges_class in ('one', 'two_up'):
+        if self.ges_class in ('one', 'two_up'):
             # pen stroke
             points = self.point_buffer.nextPoints(self.HAND_STROKE_UNIT)
             if points is not None:
                 self.drawStroke(*points)
                 self.update()
-        elif ges_class == 'stop':
+        elif self.ges_class == 'stop':
             # page move
             points = self.point_buffer.nextPoints(2)
             if points is not None:
                 self.updateOffset(points[0] - points[1])
                 self.update()
+
+    def paintEngine(self, e):
+        super().paintEngine(e)
+        # TODO: draw hand cursor
 
 
 if __name__ == '__main__':
