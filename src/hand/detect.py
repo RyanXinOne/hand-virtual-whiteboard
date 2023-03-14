@@ -18,11 +18,11 @@ from hand.utils.transforms import Resize, DEFAULT_TRANSFORMS
 from hand.utils.parse_config import parse_data_config
 
 
-MODEL_DEF = "config/yolov3-hagrid-3.cfg"
-PRETRAINED_WEIGHTS = "weights/hand/hagrid-3.pth"
+MODEL_DEF = "config/yolov3-hagrid-13.cfg"
+PRETRAINED_WEIGHTS = "weights/hand/hagrid-13.pth"
 BATCH_SIZE = 1
-DATA_CONFIG = "config/hagrid-3.data"
-IMAGES_INPUT = "D:/Datasets/HaGRID/hagrid-3/images/subsample"
+DATA_CONFIG = "config/hagrid-13.data"
+IMAGES_INPUT = "D:/Datasets/HaGRID/hagrid-13/images/subsample"
 IMAGES_OUTPUT = "output/hand"
 IMG_SIZE = 416
 N_CPU = 4

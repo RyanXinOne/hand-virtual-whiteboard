@@ -15,15 +15,15 @@ from fingertip.detect import detect_image as detect_fingertip
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
-IMAGES_INPUT = "D:/Datasets/HaGRID/hagrid-3/images/subsample"
+IMAGES_INPUT = "D:/Datasets/HaGRID/hagrid-13/images/subsample"
 IMAGES_OUTPUT = "output/pipeline"
 
 
 class DetectEngine:
-    HAND_DATA_CONFIG = "config/hagrid-3.data"
-    HAND_MODEL_DEF = "config/yolov3-hagrid-3.cfg"
-    HAND_WEIGHTS = "weights/hand/hagrid-3.pth"
-    CONF_THRES = 0.1
+    HAND_DATA_CONFIG = "config/hagrid-13.data"
+    HAND_MODEL_DEF = "config/yolov3-hagrid-13.cfg"
+    HAND_WEIGHTS = "weights/hand/hagrid-13.pth"
+    CONF_THRES = 0.25
     NMS_THRES = 0.4
     FINGERTIP_WEIGHTS = "weights/fingertip/hagrid-13-fingertip.pth"
     FINGERTIP_CLASSES = ("like", "one", "stop", "two_up")

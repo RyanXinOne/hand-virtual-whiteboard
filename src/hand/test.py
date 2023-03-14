@@ -12,10 +12,10 @@ from hand.utils.transforms import DEFAULT_TRANSFORMS
 from hand.utils.parse_config import parse_data_config
 
 
-MODEL_DEF = "config/yolov3-hagrid-3.cfg"
-PRETRAINED_WEIGHTS = "weights/hand/hagrid-3.pth"
+MODEL_DEF = "config/yolov3-hagrid-13.cfg"
+PRETRAINED_WEIGHTS = "weights/hand/hagrid-13.pth"
 BATCH_SIZE = 8
-DATA_CONFIG = "config/hagrid-3.data"
+DATA_CONFIG = "config/hagrid-13.data"
 IMG_SIZE = 416
 N_CPU = 4
 IOU_THRES = 0.5
