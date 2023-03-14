@@ -1,6 +1,7 @@
 from math import sqrt
 import numpy as np
-from PyQt6.QtCore import QPoint, QTimer, pyqtSignal
+from PyQt6.QtCore import QTimer, pyqtSignal, QPoint, QRectF
+from PyQt6.QtSvg import QSvgRenderer
 
 from gui.canvas import Canvas
 from detect import DetectEngine
@@ -58,6 +59,7 @@ class HandCanvas(Canvas):
     '''
     HAND_STROKE_UNIT = 4
     END_STROKE_IN_SEC = 1
+    CURSOR_SIZE = 20
 
     # define gesture signal
     onGesture = pyqtSignal(str)
@@ -78,6 +80,10 @@ class HandCanvas(Canvas):
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
         self.timer.timeout.connect(timerTimeoutSlot)
+
+        self.penCursorRenderer = QSvgRenderer('assets/pen.svg')
+        self.eraserCursorRenderer = QSvgRenderer('assets/eraser.svg')
+        self.pageCursorRenderer = QSvgRenderer('assets/hand.svg')
 
     def timerEvent(self, e):
         super().timerEvent(e)
@@ -121,15 +127,35 @@ class HandCanvas(Canvas):
                 self.drawStroke(*points)
                 self.update()
         elif self.ges_class == 'stop':
-            # page move
+            # page drag
             points = self.point_buffer.nextPoints(2)
             if points is not None:
                 self.updateOffset(points[0] - points[1])
                 self.update()
 
-    def paintEngine(self, e):
-        super().paintEngine(e)
-        # TODO: draw hand cursor
+    def paintEvent(self, e):
+        super().paintEvent(e)
+        # draw hand cursor
+        self.painter.begin(self)
+        if self.ges_class == 'one':
+            self.penCursorRenderer.render(self.painter, QRectF(
+                self.ges_point.x() - 2,
+                self.ges_point.y() - self.CURSOR_SIZE + 2,
+                self.CURSOR_SIZE,
+                self.CURSOR_SIZE))
+        elif self.ges_class == 'two_up':
+            self.eraserCursorRenderer.render(self.painter, QRectF(
+                self.ges_point.x() - 3,
+                self.ges_point.y() - self.CURSOR_SIZE + 3,
+                self.CURSOR_SIZE,
+                self.CURSOR_SIZE))
+        elif self.ges_class == 'stop':
+            self.pageCursorRenderer.render(self.painter, QRectF(
+                self.ges_point.x() - self.CURSOR_SIZE / 2,
+                self.ges_point.y(),
+                self.CURSOR_SIZE,
+                self.CURSOR_SIZE))
+        self.painter.end()
 
 
 if __name__ == '__main__':

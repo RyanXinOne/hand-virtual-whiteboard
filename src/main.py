@@ -27,9 +27,9 @@ class MainWindow(QMainWindow):
                 if not self.eraserAct.isChecked():
                     self.eraserAct.setChecked(True)
             elif ges_class == 'stop':
-                # activate page move
-                if not self.pageMoveAct.isChecked():
-                    self.pageMoveAct.setChecked(True)
+                # activate page drag
+                if not self.pageDragAct.isChecked():
+                    self.pageDragAct.setChecked(True)
 
         self.canvas = HandCanvas(self)
         self.canvas.onGesture.connect(gestureSlot)
@@ -62,8 +62,8 @@ class MainWindow(QMainWindow):
                 self.canvas.setPaintingMode('erase')
                 self.auxToolbar.switchToolbar(self.auxToolbarIds['eraser'])
 
-        def pageMoveSlot():
-            if self.pageMoveAct.isChecked():
+        def pageDragSlot():
+            if self.pageDragAct.isChecked():
                 self.canvas.setMouseTool('page')
                 self.auxToolbar.switchToolbar(self.auxToolbarIds['empty'])
 
@@ -82,24 +82,26 @@ class MainWindow(QMainWindow):
         self.eraserAct.setCheckable(True)
         self.eraserAct.toggled.connect(eraserSlot)
 
-        self.pageMoveAct = QAction(QIcon('assets/hand.svg'), 'Pan around', self)
-        self.pageMoveAct.setCheckable(True)
-        self.pageMoveAct.toggled.connect(pageMoveSlot)
+        self.pageDragAct = QAction(QIcon('assets/hand.svg'), 'Pan around', self)
+        self.pageDragAct.setCheckable(True)
+        self.pageDragAct.toggled.connect(pageDragSlot)
 
         toolExcGroup = QActionGroup(self)
         toolExcGroup.setExclusive(True)
         toolExcGroup.addAction(self.penAct)
         toolExcGroup.addAction(self.eraserAct)
-        toolExcGroup.addAction(self.pageMoveAct)
+        toolExcGroup.addAction(self.pageDragAct)
         self.penAct.setChecked(True)
 
         mainToolbar = QToolBar('Main Toolbar', self)
+        mainToolbar.setAllowedAreas(Qt.ToolBarArea.TopToolBarArea | Qt.ToolBarArea.BottomToolBarArea)
+        mainToolbar.setIconSize(QSize(24, 24))
         mainToolbar.addAction(cameraAct)
         mainToolbar.addAction(clearAct)
         mainToolbar.addSeparator()
         mainToolbar.addAction(self.penAct)
         mainToolbar.addAction(self.eraserAct)
-        mainToolbar.addAction(self.pageMoveAct)
+        mainToolbar.addAction(self.pageDragAct)
 
         self.addToolBar(Qt.ToolBarArea.TopToolBarArea, mainToolbar)
 
@@ -167,10 +169,14 @@ class MainWindow(QMainWindow):
         emptyToolbar = QToolBar(self)
 
         self.auxToolbar = StackedToolbar('Auxiliary Toolbar', self)
-        self.auxToolbarIds = {}
-        self.auxToolbarIds['pen'] = self.auxToolbar.addToolbar(penToolbar)
-        self.auxToolbarIds['eraser'] = self.auxToolbar.addToolbar(eraserToolbar)
-        self.auxToolbarIds['empty'] = self.auxToolbar.addToolbar(emptyToolbar)
+        self.auxToolbar.setAllowedAreas(Qt.ToolBarArea.LeftToolBarArea | Qt.ToolBarArea.RightToolBarArea)
+        self.auxToolbar.setIconSize(QSize(28, 28))
+        self.auxToolbar.setSpacing(5)
+        self.auxToolbarIds = {
+            'pen': self.auxToolbar.addToolbar(penToolbar),
+            'eraser': self.auxToolbar.addToolbar(eraserToolbar),
+            'empty': self.auxToolbar.addToolbar(emptyToolbar)
+        }
 
         self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, self.auxToolbar)
 
