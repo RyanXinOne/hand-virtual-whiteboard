@@ -90,15 +90,17 @@ class HandCanvas(Canvas):
         image = self.getCameraArray()
         if image.size == 0:
             return
-        detection = self.engine.detect(image)
-        if detection is None:
+        detections = self.engine.detect(image)
+
+        if not detections:
             return
 
         if self.show_camera:
-            image = self.engine.drawDetection(image, detection)
-            self.setCameraArray(image)
+            for detection in detections:
+                image = self.engine.drawDetection(image, detection)
+                self.setCameraArray(image)
 
-        x, y, bx1, by1, bx2, by2, conf, cls_n = detection
+        x, y, bx1, by1, bx2, by2, conf, cls_n = detections[0]
         if cls_n not in ('one', 'two_up', 'stop'):
             return
 

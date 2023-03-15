@@ -20,6 +20,7 @@ IMAGES_OUTPUT = "output/pipeline"
 
 
 class DetectEngine:
+    MAX_NUM = 2
     HAND_DATA_CONFIG = "config/hagrid-13.data"
     HAND_MODEL_DEF = "config/yolov3-hagrid-13.cfg"
     HAND_WEIGHTS = "weights/hand/hagrid-13.pth"
@@ -38,34 +39,39 @@ class DetectEngine:
         self.class_names = load_classes(data_config["names"])
 
     def detect(self, image):
-        '''Return fingertip coordinate, hand bounding box, confidence, and class name. All coordinates are absolute values in floating numbers.
+        '''Return a list of detections. Each detection is a tuple containing fingertip coordinate, hand bounding box, confidence, and class name.
 
-        If no hand is detected, return None. If no fingertip is detected, fingertip coordinate is set to -1.
+        Detections are returned in the order of confidence.
+
+        All coordinates are absolute values in floating numbers.
+
+        If no fingertip is detected, fingertip coordinate is set to -1.
         '''
         # hand detection
-        detection = detect_hand(self.hand_model, image, conf_thres=self.CONF_THRES, nms_thres=self.NMS_THRES, device=self.DEVICE)
-        if detection.shape[0] == 0:
-            # no hand detected
-            return None
-        abs_x1, abs_y1, abs_x2, abs_y2, conf, cls_pred = detection[0]
-        abs_x1, abs_y1, abs_x2, abs_y2 = max(abs_x1, 0), max(abs_y1, 0), min(abs_x2, image.shape[1]), min(abs_y2, image.shape[0])
+        hand_detections = detect_hand(self.hand_model, image, conf_thres=self.CONF_THRES, nms_thres=self.NMS_THRES, device=self.DEVICE)
 
-        b_x1, b_y1, b_x2, b_y2 = round(abs_x1), round(abs_y1), round(abs_x2), round(abs_y2)
-        if b_x1 >= b_x2 or b_y1 >= b_y2:
-            return None
+        detections = []
+        for hand_detection in hand_detections[:self.MAX_NUM]:
+            abs_x1, abs_y1, abs_x2, abs_y2, conf, cls_pred = hand_detection
+            abs_x1, abs_y1, abs_x2, abs_y2 = max(abs_x1, 0), max(abs_y1, 0), min(abs_x2, image.shape[1]), min(abs_y2, image.shape[0])
 
-        cls_name = self.classIndexToName(cls_pred)
-        if cls_name in self.FINGERTIP_CLASSES:
-            # crop hand
-            hand_image = image[b_y1:b_y2, b_x1:b_x2]
+            b_x1, b_y1, b_x2, b_y2 = round(abs_x1), round(abs_y1), round(abs_x2), round(abs_y2)
+            if b_x1 >= b_x2 or b_y1 >= b_y2:
+                continue
 
-            # fingertip detection
-            tip_x, tip_y = detect_fingertip(self.fingertip_model, hand_image, device=self.DEVICE)
-            abs_tip_x, abs_tip_y = tip_x * hand_image.shape[1] + b_x1, tip_y * hand_image.shape[0] + b_y1
-        else:
-            abs_tip_x = abs_tip_y = -1
+            cls_name = self.classIndexToName(cls_pred)
+            if cls_name in self.FINGERTIP_CLASSES:
+                # crop hand
+                hand_image = image[b_y1:b_y2, b_x1:b_x2]
 
-        return abs_tip_x, abs_tip_y, abs_x1, abs_y1, abs_x2, abs_y2, conf, cls_name
+                # fingertip detection
+                tip_x, tip_y = detect_fingertip(self.fingertip_model, hand_image, device=self.DEVICE)
+                abs_tip_x, abs_tip_y = tip_x * hand_image.shape[1] + b_x1, tip_y * hand_image.shape[0] + b_y1
+            else:
+                abs_tip_x = abs_tip_y = -1
+
+            detections.append((abs_tip_x, abs_tip_y, abs_x1, abs_y1, abs_x2, abs_y2, conf, cls_name))
+        return detections
 
     def classIndexToName(self, class_index):
         return self.class_names[int(class_index)]
@@ -99,8 +105,8 @@ if __name__ == "__main__":
             print(f"Could not read image '{img_path}'.")
             continue
 
-        detection = engine.detect(image)
-        if detection is not None:
+        detections = engine.detect(image)
+        for detection in detections:
             image = engine.drawDetection(image, detection)
 
         # show image
