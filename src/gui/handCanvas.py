@@ -1,17 +1,17 @@
 from math import sqrt
 import numpy as np
-from PyQt6.QtCore import QTimer, pyqtSignal, QPoint, QRectF
+from PyQt6.QtCore import QTimer, pyqtSignal, QPoint, QPointF, QRectF
 from PyQt6.QtSvg import QSvgRenderer
 
 from gui.canvas import Canvas
 from detect import DetectEngine
 
 
-class HandPointBuffer:
-    '''A buffer storing detected hand points of the same class.
+class GesturePointBuffer:
+    '''A buffer storing detected gesture points of the same class.
     '''
     RESPONSE_DELAY = 0
-    MIN_DISTANCE = 6
+    MIN_DISTANCE = 12
 
     def __init__(self):
         self.class_ = ''
@@ -36,13 +36,15 @@ class HandPointBuffer:
     def getClass(self):
         return self.class_
 
-    def nextPoints(self, num=1):
+    def nextPoints(self, num=1, filter=lambda x: x):
         '''Get next n points from buffer if available. The first n - 1 points are removed from the buffer.
+
+        Filter function is applied to each point before returning.
         '''
         if len(self.buffer) >= self.RESPONSE_DELAY + num:
             points = self.buffer[:num]
             self.buffer = self.buffer[num-1:]
-            return points
+            return list(map(filter, points))
         else:
             return None
 
@@ -57,8 +59,8 @@ class HandPointBuffer:
 class HandCanvas(Canvas):
     '''Canvas controlled by hand.
     '''
-    HAND_STROKE_UNIT = 4
-    END_STROKE_IN_SEC = 1
+    HAND_STROKE_UNIT = 3
+    END_STROKE_IN_SEC = 1.5
     CURSOR_SIZE = 20
 
     # define gesture signal
@@ -66,7 +68,7 @@ class HandCanvas(Canvas):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.point_buffer = HandPointBuffer()
+        self.point_buffer = GesturePointBuffer()
         self.ges_class = ''
 
         self.engine = DetectEngine()
@@ -76,6 +78,7 @@ class HandCanvas(Canvas):
         def timerTimeoutSlot():
             self.ges_class = ''
             self.point_buffer.clear()
+            self.update()
 
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
@@ -105,14 +108,9 @@ class HandCanvas(Canvas):
             return
 
         if x > -1:
-            # fingertip coordinate transform from camera to canvas
-            rect = self.getCameraRect()
-            point_x = (x - rect.x()) * self.width() / rect.width()
-            point_y = (y - rect.y()) * self.height() / rect.height()
-            self.ges_point = QPoint(round(point_x), round(point_y))
-
+            self.ges_point = QPointF(x, y)
             is_new_class = self.point_buffer.add(cls_n, self.ges_point)
-            self.timer.start(self.END_STROKE_IN_SEC * 1000)
+            self.timer.start(int(self.END_STROKE_IN_SEC * 1000))
 
             self.ges_class = self.point_buffer.getClass()
             if is_new_class:
@@ -124,40 +122,52 @@ class HandCanvas(Canvas):
 
         if self.ges_class in ('one', 'two_up'):
             # pen stroke
-            points = self.point_buffer.nextPoints(self.HAND_STROKE_UNIT)
+            points = self.point_buffer.nextPoints(self.HAND_STROKE_UNIT, filter=self._cameraToGeoPos)
             if points is not None:
                 self.drawStroke(*points)
                 self.update()
         elif self.ges_class == 'stop':
             # page drag
-            points = self.point_buffer.nextPoints(2)
+            points = self.point_buffer.nextPoints(2, filter=self._cameraToGeoPos)
             if points is not None:
                 self.updateOffset(points[0] - points[1])
                 self.update()
 
     def paintEvent(self, e):
         super().paintEvent(e)
+        if self.ges_class not in ('one', 'two_up', 'stop'):
+            return
+        geo_point = self._cameraToGeoPos(self.ges_point)
         # draw hand cursor
         self.painter.begin(self)
         if self.ges_class == 'one':
             self.penCursorRenderer.render(self.painter, QRectF(
-                self.ges_point.x() - 2,
-                self.ges_point.y() - self.CURSOR_SIZE + 2,
+                geo_point.x() - 2,
+                geo_point.y() - self.CURSOR_SIZE + 2,
                 self.CURSOR_SIZE,
                 self.CURSOR_SIZE))
         elif self.ges_class == 'two_up':
             self.eraserCursorRenderer.render(self.painter, QRectF(
-                self.ges_point.x() - 3,
-                self.ges_point.y() - self.CURSOR_SIZE + 3,
+                geo_point.x() - 3,
+                geo_point.y() - self.CURSOR_SIZE + 3,
                 self.CURSOR_SIZE,
                 self.CURSOR_SIZE))
         elif self.ges_class == 'stop':
             self.pageCursorRenderer.render(self.painter, QRectF(
-                self.ges_point.x() - self.CURSOR_SIZE / 2,
-                self.ges_point.y(),
+                geo_point.x() - self.CURSOR_SIZE / 2,
+                geo_point.y(),
                 self.CURSOR_SIZE,
                 self.CURSOR_SIZE))
         self.painter.end()
+
+    def _cameraToGeoPos(self, point):
+        '''Transform point from camera coordinate to geometry coordinate.
+        '''
+        rect = self.getCameraRect()
+        geo_point_x = (point.x() - rect.x()) * self.width() / rect.width()
+        geo_point_y = (point.y() - rect.y()) * self.height() / rect.height()
+
+        return QPoint(round(geo_point_x), round(geo_point_y))
 
 
 if __name__ == '__main__':
