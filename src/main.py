@@ -108,6 +108,23 @@ class MainWindow(QMainWindow):
     def _setupAuxToolbar(self):
         '''Setup auxiliary toolbar lies on the left.
         '''
+        penToolbar = self._setupAuxPenToolbar()
+        eraserToolbar = self._setupAusEraserToolbar()
+        emptyToolbar = QToolBar(self)
+
+        self.auxToolbar = StackedToolbar('Auxiliary Toolbar', self)
+        self.auxToolbar.setAllowedAreas(Qt.ToolBarArea.LeftToolBarArea | Qt.ToolBarArea.RightToolBarArea)
+        self.auxToolbar.setIconSize(QSize(28, 28))
+        self.auxToolbar.setSpacing(5)
+        self.auxToolbarIds = {
+            'pen': self.auxToolbar.addToolbar(penToolbar),
+            'eraser': self.auxToolbar.addToolbar(eraserToolbar),
+            'empty': self.auxToolbar.addToolbar(emptyToolbar)
+        }
+
+        self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, self.auxToolbar)
+
+    def _setupAuxPenToolbar(self):
         def blackSlot():
             if blackAct.isChecked():
                 self.canvas.setPenColor(QColor('#212121'))
@@ -128,23 +145,35 @@ class MainWindow(QMainWindow):
             if greenAct.isChecked():
                 self.canvas.setPenColor(QColor('#43a047'))
 
-        blackAct = QAction(QIcon('assets/black.svg'), 'Black', self)
+        def thinSlot():
+            if thinAct.isChecked():
+                self.canvas.setPenThickness(5)
+
+        def mediumSlot():
+            if mediumAct.isChecked():
+                self.canvas.setPenThickness(15)
+
+        def thickSlot():
+            if thickAct.isChecked():
+                self.canvas.setPenThickness(30)
+
+        blackAct = QAction(QIcon('assets/color/black.svg'), 'Black', self)
         blackAct.setCheckable(True)
         blackAct.toggled.connect(blackSlot)
 
-        redAct = QAction(QIcon('assets/red.svg'), 'Red', self)
+        redAct = QAction(QIcon('assets/color/red.svg'), 'Red', self)
         redAct.setCheckable(True)
         redAct.toggled.connect(redSlot)
 
-        yellowAct = QAction(QIcon('assets/yellow.svg'), 'Yellow', self)
+        yellowAct = QAction(QIcon('assets/color/yellow.svg'), 'Yellow', self)
         yellowAct.setCheckable(True)
         yellowAct.toggled.connect(yellowSlot)
 
-        blueAct = QAction(QIcon('assets/blue.svg'), 'Blue', self)
+        blueAct = QAction(QIcon('assets/color/blue.svg'), 'Blue', self)
         blueAct.setCheckable(True)
         blueAct.toggled.connect(blueSlot)
 
-        greenAct = QAction(QIcon('assets/green.svg'), 'Green', self)
+        greenAct = QAction(QIcon('assets/color/green.svg'), 'Green', self)
         greenAct.setCheckable(True)
         greenAct.toggled.connect(greenSlot)
 
@@ -157,28 +186,76 @@ class MainWindow(QMainWindow):
         colorExcGroup.addAction(greenAct)
         blackAct.setChecked(True)
 
+        thinAct = QAction(QIcon('assets/thickness/thin.svg'), 'Thin', self)
+        thinAct.setCheckable(True)
+        thinAct.toggled.connect(thinSlot)
+
+        mediumAct = QAction(QIcon('assets/thickness/medium.svg'), 'Medium', self)
+        mediumAct.setCheckable(True)
+        mediumAct.toggled.connect(mediumSlot)
+
+        thickAct = QAction(QIcon('assets/thickness/thick.svg'), 'Thick', self)
+        thickAct.setCheckable(True)
+        thickAct.toggled.connect(thickSlot)
+
+        thicknessExcGroup = QActionGroup(self)
+        thicknessExcGroup.setExclusive(True)
+        thicknessExcGroup.addAction(thinAct)
+        thicknessExcGroup.addAction(mediumAct)
+        thicknessExcGroup.addAction(thickAct)
+        thinAct.setChecked(True)
+
         penToolbar = QToolBar(self)
         penToolbar.addAction(blackAct)
         penToolbar.addAction(redAct)
         penToolbar.addAction(yellowAct)
         penToolbar.addAction(blueAct)
         penToolbar.addAction(greenAct)
+        penToolbar.addSeparator()
+        penToolbar.addAction(thinAct)
+        penToolbar.addAction(mediumAct)
+        penToolbar.addAction(thickAct)
+
+        return penToolbar
+
+    def _setupAusEraserToolbar(self):
+        def thinSlot():
+            if thinAct.isChecked():
+                self.canvas.setEraserThickness(10)
+
+        def mediumSlot():
+            if mediumAct.isChecked():
+                self.canvas.setEraserThickness(25)
+
+        def thickSlot():
+            if thickAct.isChecked():
+                self.canvas.setEraserThickness(50)
+
+        thinAct = QAction(QIcon('assets/thickness/thin.svg'), 'Thin', self)
+        thinAct.setCheckable(True)
+        thinAct.toggled.connect(thinSlot)
+
+        mediumAct = QAction(QIcon('assets/thickness/medium.svg'), 'Medium', self)
+        mediumAct.setCheckable(True)
+        mediumAct.toggled.connect(mediumSlot)
+
+        thickAct = QAction(QIcon('assets/thickness/thick.svg'), 'Thick', self)
+        thickAct.setCheckable(True)
+        thickAct.toggled.connect(thickSlot)
+
+        thicknessExcGroup = QActionGroup(self)
+        thicknessExcGroup.setExclusive(True)
+        thicknessExcGroup.addAction(thinAct)
+        thicknessExcGroup.addAction(mediumAct)
+        thicknessExcGroup.addAction(thickAct)
+        mediumAct.setChecked(True)
 
         eraserToolbar = QToolBar(self)
+        eraserToolbar.addAction(thinAct)
+        eraserToolbar.addAction(mediumAct)
+        eraserToolbar.addAction(thickAct)
 
-        emptyToolbar = QToolBar(self)
-
-        self.auxToolbar = StackedToolbar('Auxiliary Toolbar', self)
-        self.auxToolbar.setAllowedAreas(Qt.ToolBarArea.LeftToolBarArea | Qt.ToolBarArea.RightToolBarArea)
-        self.auxToolbar.setIconSize(QSize(28, 28))
-        self.auxToolbar.setSpacing(5)
-        self.auxToolbarIds = {
-            'pen': self.auxToolbar.addToolbar(penToolbar),
-            'eraser': self.auxToolbar.addToolbar(eraserToolbar),
-            'empty': self.auxToolbar.addToolbar(emptyToolbar)
-        }
-
-        self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, self.auxToolbar)
+        return eraserToolbar
 
     def sizeHint(self):
         return QSize(800, 600)
