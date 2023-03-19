@@ -1,3 +1,4 @@
+import time
 from math import sqrt
 import numpy as np
 from PyQt6.QtCore import QTimer, pyqtSignal, QPoint, QPointF, QRectF
@@ -17,7 +18,7 @@ class GesturePointBuffer:
         self.class_ = ''
         self.buffer = []
 
-    def add(self, class_, point):
+    def add(self, class_, point, save_point=True):
         '''Add a point to the buffer. If a new class, the buffer is cleared first. Filter out point by MIN_DISTANCE.
 
         Return:
@@ -26,10 +27,11 @@ class GesturePointBuffer:
         if class_ != self.class_:
             self.class_ = class_
             self.buffer.clear()
-            self.buffer.append(point)
+            if save_point:
+                self.buffer.append(point)
             return True
         else:
-            if self._pointDistance(self.buffer[-1], point) >= self.MIN_DISTANCE:
+            if save_point and (not self.buffer or self._pointDistance(self.buffer[-1], point) >= self.MIN_DISTANCE):
                 self.buffer.append(point)
             return False
 
@@ -61,6 +63,7 @@ class HandCanvas(Canvas):
     '''
     HAND_STROKE_UNIT = 3
     END_STROKE_IN_SEC = 1.5
+    CLEAR_CANVAS_IN_SEC = 3
     CURSOR_SIZE = 20
 
     # define gesture signal
@@ -70,23 +73,27 @@ class HandCanvas(Canvas):
         super().__init__(parent)
         self.point_buffer = GesturePointBuffer()
         self.ges_class = ''
+        self.ges_point = QPointF()
 
         self.engine = DetectEngine()
         # dry run to make engine prepared
         self.engine.detect(np.empty((1, 1, 3), dtype=np.uint8))
 
-        def timerTimeoutSlot():
+        def endGestureTimeoutSlot():
             self.ges_class = ''
             self.point_buffer.clear()
             self.update()
 
-        self.timer = QTimer(self)
-        self.timer.setSingleShot(True)
-        self.timer.timeout.connect(timerTimeoutSlot)
+        self.noGestureTimer = QTimer(self)
+        self.noGestureTimer.setSingleShot(True)
+        self.noGestureTimer.timeout.connect(endGestureTimeoutSlot)
+
+        self.clearIniTimestamp = 0
 
         self.penCursorRenderer = QSvgRenderer('assets/pen.svg')
         self.eraserCursorRenderer = QSvgRenderer('assets/eraser.svg')
         self.pageCursorRenderer = QSvgRenderer('assets/hand.svg')
+        self.clearCursorRenderer = QSvgRenderer('assets/clear.svg')
 
     def timerEvent(self, e):
         super().timerEvent(e)
@@ -94,7 +101,6 @@ class HandCanvas(Canvas):
         if image.size == 0:
             return
         detections = self.engine.detect(image)
-
         if not detections:
             return
 
@@ -104,41 +110,50 @@ class HandCanvas(Canvas):
                 self.setCameraArray(image)
 
         x, y, bx1, by1, bx2, by2, conf, cls_n = detections[0]
-        if cls_n not in ('one', 'two_up', 'stop'):
+        if cls_n not in ('fist', 'one', 'two_up', 'stop', 'dislike'):
             return
+
+        self.noGestureTimer.start(int(self.END_STROKE_IN_SEC * 1000))
 
         if x > -1:
             self.ges_point = QPointF(x, y)
-            is_new_class = self.point_buffer.add(cls_n, self.ges_point)
-            self.timer.start(int(self.END_STROKE_IN_SEC * 1000))
-
-            self.ges_class = self.point_buffer.getClass()
-            if is_new_class:
-                self.onGesture.emit(self.ges_class)
         else:
-            self.timer.stop()
-            self.ges_class = cls_n
-            self.point_buffer.clear()
+            self.ges_point = QPointF((bx1 + bx2) / 2, (by1 + by2) / 2)
 
-        if self.ges_class in ('one', 'two_up'):
+        is_new_class = self.point_buffer.add(cls_n, self.ges_point, save_point=(x > -1))
+        self.ges_class = self.point_buffer.getClass()
+        if is_new_class:
+            self.onGesture.emit(self.ges_class)
+
+        if self.ges_class == 'dislike':
+            # clear canvas
+            timeDiff = time.time() - self.clearIniTimestamp
+            if timeDiff >= self.CLEAR_CANVAS_IN_SEC:
+                if timeDiff < self.CLEAR_CANVAS_IN_SEC + 0.5:
+                    self.clearStrokes()
+                self.clearIniTimestamp = time.time()
+        else:
+            self.clearIniTimestamp = 0
+        if self.ges_class == 'one' or self.ges_class == 'two_up':
             # pen stroke
             points = self.point_buffer.nextPoints(self.HAND_STROKE_UNIT, filter=self._cameraToGeoPos)
             if points is not None:
                 self.drawStroke(*points)
-                self.update()
         elif self.ges_class == 'stop':
             # page drag
             points = self.point_buffer.nextPoints(2, filter=self._cameraToGeoPos)
             if points is not None:
                 self.updateOffset(points[0] - points[1])
-                self.update()
+        elif self.ges_class == 'fist':
+            # end the previous gesture
+            pass
+
+        self.update()
 
     def paintEvent(self, e):
         super().paintEvent(e)
-        if self.ges_class not in ('one', 'two_up', 'stop'):
-            return
-        geo_point = self._cameraToGeoPos(self.ges_point)
         # draw hand cursor
+        geo_point = self._cameraToGeoPos(self.ges_point)
         self.painter.begin(self)
         if self.ges_class == 'one':
             self.penCursorRenderer.render(self.painter, QRectF(
@@ -158,15 +173,23 @@ class HandCanvas(Canvas):
                 geo_point.y(),
                 self.CURSOR_SIZE,
                 self.CURSOR_SIZE))
+        elif self.ges_class == 'dislike':
+            self.clearCursorRenderer.render(self.painter, QRectF(
+                geo_point.x() - self.CURSOR_SIZE / 2,
+                geo_point.y() - self.CURSOR_SIZE / 2,
+                self.CURSOR_SIZE,
+                self.CURSOR_SIZE))
         self.painter.end()
 
     def _cameraToGeoPos(self, point):
         '''Transform point from camera coordinate to geometry coordinate.
         '''
+        if point.isNull():
+            return QPoint()
+
         rect = self.getCameraRect()
         geo_point_x = (point.x() - rect.x()) * self.width() / rect.width()
         geo_point_y = (point.y() - rect.y()) * self.height() / rect.height()
-
         return QPoint(round(geo_point_x), round(geo_point_y))
 
 
