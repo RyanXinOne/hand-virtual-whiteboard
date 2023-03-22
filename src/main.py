@@ -21,15 +21,21 @@ class MainWindow(QMainWindow):
             if ges_class == 'one':
                 # activate pen
                 if not self.penAct.isChecked():
-                    self.penAct.setChecked(True)
+                    self.penAct.toggle()
             elif ges_class == 'two_up':
                 # activate eraser
                 if not self.eraserAct.isChecked():
-                    self.eraserAct.setChecked(True)
+                    self.eraserAct.toggle()
             elif ges_class == 'stop':
                 # activate page drag
                 if not self.pageDragAct.isChecked():
-                    self.pageDragAct.setChecked(True)
+                    self.pageDragAct.toggle()
+            elif ges_class == 'dislike':
+                # perform clear
+                self.clearAct.trigger()
+            elif ges_class == 'ok':
+                # perform save
+                self.saveAct.trigger()
 
         self.canvas = HandCanvas(self)
         self.canvas.onGesture.connect(gestureSlot)
@@ -46,8 +52,11 @@ class MainWindow(QMainWindow):
             self.canvas.toggleCamera(cameraAct.isChecked())
             self.canvas.update()
 
+        def saveSlot():
+            self.canvas.saveCanvas()
+
         def clearSlot():
-            self.canvas.clearStrokes()
+            self.canvas.clearCanvas()
             self.canvas.update()
 
         def penSlot():
@@ -71,8 +80,11 @@ class MainWindow(QMainWindow):
         cameraAct.setCheckable(True)
         cameraAct.toggled.connect(cameraSlot)
 
-        clearAct = QAction(QIcon('assets/clear.svg'), 'Clear', self)
-        clearAct.triggered.connect(clearSlot)
+        self.saveAct = QAction(QIcon('assets/download.svg'), 'Export', self)
+        self.saveAct.triggered.connect(saveSlot)
+
+        self.clearAct = QAction(QIcon('assets/clear.svg'), 'Clear', self)
+        self.clearAct.triggered.connect(clearSlot)
 
         self.penAct = QAction(QIcon('assets/pen.svg'), 'Pen', self)
         self.penAct.setCheckable(True)
@@ -97,7 +109,8 @@ class MainWindow(QMainWindow):
         mainToolbar.setAllowedAreas(Qt.ToolBarArea.TopToolBarArea | Qt.ToolBarArea.BottomToolBarArea)
         mainToolbar.setIconSize(QSize(24, 24))
         mainToolbar.addAction(cameraAct)
-        mainToolbar.addAction(clearAct)
+        mainToolbar.addAction(self.saveAct)
+        mainToolbar.addAction(self.clearAct)
         mainToolbar.addSeparator()
         mainToolbar.addAction(self.penAct)
         mainToolbar.addAction(self.eraserAct)

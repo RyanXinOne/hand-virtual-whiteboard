@@ -1,7 +1,7 @@
 import time
 import numpy as np
 import cv2
-from PyQt6.QtWidgets import QWidget
+from PyQt6.QtWidgets import QWidget, QFileDialog
 from PyQt6.QtGui import QPixmap, QImage, QPen, QFont, QColorConstants, QPainter, QPainterPath
 from PyQt6.QtCore import Qt, QSize, QPoint, QPointF, QRect
 
@@ -13,6 +13,7 @@ class Canvas(QWidget):
     MAX_SIZE = QSize(8192, 8192)
     PREFERRED_SIZE = QSize(640, 480)
     MOUSE_STROKE_UNIT = 3  # 2->line, 3->quad curve, 4->cubic curve
+    SAVE_MARGIN_SIZE = 60
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -25,7 +26,9 @@ class Canvas(QWidget):
         self.background_board = QPixmap(self.MAX_SIZE)
         self.setBackgroundColor(QColorConstants.White)
         self.strokes_board = QPixmap(self.MAX_SIZE)
-        self.clearStrokes()
+        self.clearCanvas()
+
+        self.strokes_bounding = QRect()
 
         self.pen = QPen(QColorConstants.Black, 5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
         self.eraser = QPen(QColorConstants.Transparent, 25, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
@@ -41,6 +44,8 @@ class Canvas(QWidget):
         self.last_frame_time = time.perf_counter()
 
         self.toggleCamera(False)
+
+        self.saving = False
 
         self.startTimer(0)
 
@@ -78,8 +83,27 @@ class Canvas(QWidget):
         self.show_camera = state
         self._updateCamera()
 
-    def clearStrokes(self):
+    def saveCanvas(self):
+        if self.strokes_bounding.isEmpty():
+            return
+        self.saving = True
+        canvasImage = QImage(self.strokes_bounding.size(), QImage.Format.Format_ARGB32)
+        self.painter.begin(canvasImage)
+        # draw background
+        self.painter.drawPixmap(canvasImage.rect(), self.background_board, self.strokes_bounding)
+        # draw strokes
+        self.painter.drawPixmap(canvasImage.rect(), self.strokes_board, self.strokes_bounding)
+        self.painter.end()
+        # ask user for path
+        path, _ = QFileDialog.getSaveFileName(self, 'Export Whiteboard', 'canvas', 'Images (*.png *.jpg *.xpm *.gif)')
+        # save image
+        if path:
+            canvasImage.save(path)
+        self.saving = False
+
+    def clearCanvas(self):
         self.strokes_board.fill(QColorConstants.Transparent)
+        self.strokes_bounding = QRect()
 
     def updateOffset(self, point):
         '''Update user offset by the amount of point.
@@ -105,14 +129,18 @@ class Canvas(QWidget):
         '''
         point0 = QPointF(point0 + self.abs_offset)
         points = [QPointF(point + self.abs_offset) for point in points]
-        proceed_num = len(points)
         self.painter.begin(self.strokes_board)
         if self.painting_mode == 'draw':
             self.painter.setPen(self.pen)
             self.painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
+            # update strokes bounding
+            for point in (point0, *points):
+                self.strokes_bounding = self.strokes_bounding.united(QRect(int(point.x()) - self.SAVE_MARGIN_SIZE, int(point.y()) - self.SAVE_MARGIN_SIZE, self.SAVE_MARGIN_SIZE * 2, self.SAVE_MARGIN_SIZE * 2))
         elif self.painting_mode == 'erase':
             self.painter.setPen(self.eraser)
             self.painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
+
+        proceed_num = len(points)
         path = QPainterPath(point0)
         if proceed_num == 0:
             self.painter.drawPoint(point0)

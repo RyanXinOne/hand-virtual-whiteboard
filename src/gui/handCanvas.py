@@ -63,7 +63,7 @@ class HandCanvas(Canvas):
     '''
     HAND_STROKE_UNIT = 3
     END_STROKE_IN_SEC = 1.5
-    CLEAR_CANVAS_IN_SEC = 3
+    PERFORM_ACTION_IN_SEC = 3
     CURSOR_SIZE = 20
 
     # define gesture signal
@@ -88,15 +88,21 @@ class HandCanvas(Canvas):
         self.noGestureTimer.setSingleShot(True)
         self.noGestureTimer.timeout.connect(endGestureTimeoutSlot)
 
-        self.clearIniTimestamp = 0
+        self.actionIniTimestamp = 0
 
-        self.penCursorRenderer = QSvgRenderer('assets/pen.svg')
-        self.eraserCursorRenderer = QSvgRenderer('assets/eraser.svg')
-        self.pageCursorRenderer = QSvgRenderer('assets/hand.svg')
-        self.clearCursorRenderer = QSvgRenderer('assets/clear.svg')
+        self.cursorRenderer = {
+            'pen': QSvgRenderer('assets/pen.svg'),
+            'eraser': QSvgRenderer('assets/eraser.svg'),
+            'page': QSvgRenderer('assets/hand.svg'),
+            'clear': QSvgRenderer('assets/clear.svg'),
+            'save': QSvgRenderer('assets/download.svg')
+        }
 
     def timerEvent(self, e):
         super().timerEvent(e)
+        if self.saving:
+            return
+
         image = self.getCameraArray()
         if image.size == 0:
             return
@@ -110,7 +116,7 @@ class HandCanvas(Canvas):
                 self.setCameraArray(image)
 
         x, y, bx1, by1, bx2, by2, conf, cls_n = detections[0]
-        if cls_n not in ('fist', 'one', 'two_up', 'stop', 'dislike'):
+        if cls_n not in {'fist', 'one', 'two_up', 'stop', 'dislike', 'ok'}:
             return
 
         self.noGestureTimer.start(int(self.END_STROKE_IN_SEC * 1000))
@@ -122,33 +128,36 @@ class HandCanvas(Canvas):
 
         is_new_class = self.point_buffer.add(cls_n, self.ges_point, save_point=(x > -1))
         self.ges_class = self.point_buffer.getClass()
-        if is_new_class:
-            self.onGesture.emit(self.ges_class)
-
-        if self.ges_class == 'dislike':
-            # clear canvas
-            timeDiff = time.time() - self.clearIniTimestamp
-            if timeDiff >= self.CLEAR_CANVAS_IN_SEC:
-                if timeDiff < self.CLEAR_CANVAS_IN_SEC + 0.5:
-                    self.clearStrokes()
-                self.clearIniTimestamp = time.time()
-        else:
-            self.clearIniTimestamp = 0
-        if self.ges_class == 'one' or self.ges_class == 'two_up':
-            # pen stroke
-            points = self.point_buffer.nextPoints(self.HAND_STROKE_UNIT, filter=self._cameraToGeoPos)
-            if points is not None:
-                self.drawStroke(*points)
-        elif self.ges_class == 'stop':
-            # page drag
-            points = self.point_buffer.nextPoints(2, filter=self._cameraToGeoPos)
-            if points is not None:
-                self.updateOffset(points[0] - points[1])
-        elif self.ges_class == 'fist':
-            # end the previous gesture
-            pass
-
         self.update()
+
+        if self.ges_class in ('dislike', 'ok'):
+            # one-shot actions
+            timeDiff = time.time() - self.actionIniTimestamp
+            if timeDiff >= self.PERFORM_ACTION_IN_SEC:
+                if timeDiff < self.PERFORM_ACTION_IN_SEC + 0.5:
+                    self.onGesture.emit(self.ges_class)
+                self.actionIniTimestamp = time.time()
+        else:
+            # live actions
+            self.actionIniTimestamp = 0
+            if is_new_class:
+                self.onGesture.emit(self.ges_class)
+
+            if self.ges_class == 'one' or self.ges_class == 'two_up':
+                # pen stroke
+                points = self.point_buffer.nextPoints(self.HAND_STROKE_UNIT, filter=self._cameraToGeoPos)
+                if points is not None:
+                    self.drawStroke(*points)
+                    self.update()
+            elif self.ges_class == 'stop':
+                # page drag
+                points = self.point_buffer.nextPoints(2, filter=self._cameraToGeoPos)
+                if points is not None:
+                    self.updateOffset(points[0] - points[1])
+                    self.update()
+            elif self.ges_class == 'fist':
+                # end the previous gesture
+                pass
 
     def paintEvent(self, e):
         super().paintEvent(e)
@@ -156,25 +165,31 @@ class HandCanvas(Canvas):
         geo_point = self._cameraToGeoPos(self.ges_point)
         self.painter.begin(self)
         if self.ges_class == 'one':
-            self.penCursorRenderer.render(self.painter, QRectF(
+            self.cursorRenderer['pen'].render(self.painter, QRectF(
                 geo_point.x() - 2,
                 geo_point.y() - self.CURSOR_SIZE + 2,
                 self.CURSOR_SIZE,
                 self.CURSOR_SIZE))
         elif self.ges_class == 'two_up':
-            self.eraserCursorRenderer.render(self.painter, QRectF(
+            self.cursorRenderer['eraser'].render(self.painter, QRectF(
                 geo_point.x() - 3,
                 geo_point.y() - self.CURSOR_SIZE + 3,
                 self.CURSOR_SIZE,
                 self.CURSOR_SIZE))
         elif self.ges_class == 'stop':
-            self.pageCursorRenderer.render(self.painter, QRectF(
+            self.cursorRenderer['page'].render(self.painter, QRectF(
                 geo_point.x() - self.CURSOR_SIZE / 2,
                 geo_point.y(),
                 self.CURSOR_SIZE,
                 self.CURSOR_SIZE))
         elif self.ges_class == 'dislike':
-            self.clearCursorRenderer.render(self.painter, QRectF(
+            self.cursorRenderer['clear'].render(self.painter, QRectF(
+                geo_point.x() - self.CURSOR_SIZE / 2,
+                geo_point.y() - self.CURSOR_SIZE / 2,
+                self.CURSOR_SIZE,
+                self.CURSOR_SIZE))
+        elif self.ges_class == 'ok':
+            self.cursorRenderer['save'].render(self.painter, QRectF(
                 geo_point.x() - self.CURSOR_SIZE / 2,
                 geo_point.y() - self.CURSOR_SIZE / 2,
                 self.CURSOR_SIZE,
