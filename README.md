@@ -4,7 +4,7 @@
 
 <div align="center"><img src="preview/app.png" /></div>
 
-A hand-controlled virtual whiteboard app allows users to operate tools like pen, eraser, page drag, and other actions through hand gestures captured by a laptop camera in real-time. Users can draw on the whiteboard by moving their fingers before the camera, which acts as a source of control for the pencil or cursor on the screen. The app's backend utilizes machine learning techniques, such as the YOLO object detection method and VGG network, which runs in real-time for hand detection and fingertip localisation.
+A hand-controlled virtual whiteboard app allows users to operate tools like pen, eraser, page drag, and other actions through hand gestures captured by a laptop camera in real-time. Users can draw on the whiteboard by moving their fingers before the camera, which acts as a source of control for the pencil or cursor on the screen. The app's backend utilizes machine learning techniques, such as the [YOLO](https://github.com/eriklindernoren/PyTorch-YOLOv3) object detection method and VGG network both trained from [HaGRID](https://github.com/hukenovs/hagrid) dataset, which runs in real-time for hand detection and fingertip localisation.
 
 ## Running Application
 
