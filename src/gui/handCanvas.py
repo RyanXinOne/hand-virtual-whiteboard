@@ -1,6 +1,8 @@
 import time
 from math import sqrt
 import numpy as np
+import torch
+from PyQt6.QtWidgets import QMessageBox
 from PyQt6.QtCore import QTimer, pyqtSignal, QPoint, QPointF, QRectF
 from PyQt6.QtSvg import QSvgRenderer
 
@@ -71,6 +73,11 @@ class HandCanvas(Canvas):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.hand_disabled = not torch.cuda.is_available()
+        if self.hand_disabled:
+            QMessageBox.warning(self, 'Warning', 'No CUDA device detected. Hand drawing mode will be disabled.\nPlease setup CUDA environment for full functionality.')
+            return
+
         self.point_buffer = GesturePointBuffer()
         self.ges_class = ''
         self.ges_point = QPointF()
@@ -100,6 +107,9 @@ class HandCanvas(Canvas):
 
     def timerEvent(self, e):
         super().timerEvent(e)
+        if self.hand_disabled:
+            return
+
         if self.saving:
             return
 
@@ -161,6 +171,8 @@ class HandCanvas(Canvas):
 
     def paintEvent(self, e):
         super().paintEvent(e)
+        if self.hand_disabled:
+            return
         # draw hand cursor
         geo_point = self._cameraToGeoPos(self.ges_point)
         self.painter.begin(self)
