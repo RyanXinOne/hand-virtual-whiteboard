@@ -177,6 +177,8 @@ class Canvas(QWidget):
     def getCameraArray(self):
         '''Return camera image as np.ndarray in RGB format.
         '''
+        if self.camera_array.size == 0:
+            return self.camera_array
         return cv2.cvtColor(self.camera_array, cv2.COLOR_BGR2RGB)
 
     def setCameraArray(self, array, fromRGB=True):
@@ -238,7 +240,7 @@ class Canvas(QWidget):
         # draw strokes
         self.painter.drawPixmap(target_rect, self.strokes_board, board_rect)
         # draw fps
-        if self.show_camera:
+        if self.show_camera and not self.camera_image.isNull():
             self.painter.setPen(QPen(QColorConstants.Black))
             self.painter.setFont(QFont('Arial', 11))
             self.painter.drawText(10, 20, f'fps: {self.fps:.1f}')

@@ -11,6 +11,7 @@ A hand-controlled virtual whiteboard app allows users to operate tools like pen,
 - OS: Windows 10/11
 - Nvidia GPU + CUDA: It requires a GPU to achieve the real-time performance. The app has been tested on a GTX1660Ti GPU with CUDA 12.0. (Note that the application could still start without CUDA environment. However, the hand drawing mode would be disabled.)
 - Python >= 3.8
+- An available camera device
 
 ### Python Dependencies
 
