@@ -1,5 +1,7 @@
 # Hand Virtual Whiteboard
 
+[![GitHub](https://img.shields.io/badge/github-%23181717.svg?&style=for-the-badge&logo=github&logoColor=white)](https://github.com/RyanXinOne/hand-virtual-whiteboard)
+
 <div align="center"><img src="preview/app.png" /></div>
 
 A hand-controlled virtual whiteboard app allows users to operate tools like pen, eraser, page drag, and other actions through hand gestures captured by a laptop camera in real-time. Users can draw on the whiteboard by moving their fingers before the camera, which acts as a source of control for the pencil or cursor on the screen. The app's backend utilizes machine learning techniques, such as the YOLO object detection method and VGG network, which runs in real-time for hand detection and fingertip localisation.
@@ -27,9 +29,9 @@ pip install -r requirements.txt
 python start.py
 ```
 
-### Usage
+## Usage
 
 The following gestures could be used to control the application.
-|              Pen              |              Eraser              |           Page Drag            |           Clear Canvas            |          Export Image          |         Pending State          |
-| :---------------------------: | :------------------------------: | :----------------------------: | :-------------------------------: | :----------------------------: | :----------------------------: |
-| <img src="preview/one.png" /> | <img src="preview/two_up.png" /> | <img src="preview/stop.png" /> | <img src="preview/dislike.png" /> | <img src="preview/like.png" /> | <img src="preview/fist.png" /> |
+|           Pen           |            Eraser             |         Page Drag         |          Clear Canvas           |       Export Image        |           Null            |
+| :---------------------: | :---------------------------: | :-----------------------: | :-----------------------------: | :-----------------------: | :-----------------------: |
+| ![one](preview/one.png) | ![two_up](preview/two_up.png) | ![stop](preview/stop.png) | ![dislike](preview/dislike.png) | ![like](preview/like.png) | ![fist](preview/fist.png) |
