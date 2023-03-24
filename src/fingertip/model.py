@@ -10,9 +10,9 @@ class FingertipDetector(nn.Module):
     Output: 2x1 vector of fingertip coordinates (x, y) in range [0, 1]
     '''
 
-    def __init__(self):
+    def __init__(self, load_default_vgg_weights=True):
         super(FingertipDetector, self).__init__()
-        self.vgg16 = vgg16(weights='DEFAULT')
+        self.vgg16 = vgg16(weights='DEFAULT' if load_default_vgg_weights else None)
         self.vgg16.classifier = nn.Sequential(
             nn.Linear(512 * 7 * 7, 1024),
             nn.ReLU(),
@@ -33,7 +33,7 @@ def load_model(weights_path=None, device='cuda'):
     Args:
         weights_path (str): Path to model weights file. If None, weights are initialized.
     '''
-    model = FingertipDetector().to(device)
+    model = FingertipDetector(load_default_vgg_weights=not weights_path).to(device)
     if not weights_path:
         # initialize weights
         for m in model.modules():
