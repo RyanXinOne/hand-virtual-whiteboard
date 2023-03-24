@@ -11,6 +11,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('Hand Virtual Whiteboard')
+        self.setWindowIcon(QIcon('assets/icon.svg'))
         loadingLabel = QLabel('Loading...', self)
         loadingLabel.setFont(QFont('Arial', 13))
         loadingLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)

@@ -1,0 +1,10 @@
+torch
+torchvision
+torchsummary
+numpy
+terminaltables
+tqdm
+matplotlib
+imgaug
+opencv-python
+PyQt6
